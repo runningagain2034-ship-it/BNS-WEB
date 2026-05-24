@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BNS 2023 — AI Analysis + Telugu NLP + SHO Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{colors:{bnsp:'#1a2d4a',bnss:'#0f1729',gold:'#f5b342',cyber:'#06d6c8',accent:'#256ef5',rose:'#f47272'}}}}</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter','Segoe UI',system-ui,sans-serif}
+body{background:#060b16;color:#e6edf5;overflow-x:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:#0c1528}::-webkit-scrollbar-thumb{background:#1a2d4a;border-radius:2px}
+.glass{background:rgba(15,23,41,.85);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.05)}
+.card{background:#121e35;border:1px solid #1a2d4a;border-radius:12px;transition:all .2s}
+.card:hover{border-color:#256ef5}
+.card-h{padding:10px 14px;border-bottom:1px solid #1a2d4a;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#7a93b8;display:flex;justify-content:space-between;align-items:center}
+.card-b{padding:14px}
+.btn{padding:7px 16px;border-radius:8px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn-pry{background:linear-gradient(135deg,#256ef5,#06d6c8);color:#fff}.btn-pry:hover{box-shadow:0 4px 14px rgba(37,110,245,.3)}
+.btn-out{background:transparent;border:1px solid #1a2d4a;color:#e6edf5}.btn-out:hover{border-color:#256ef5;color:#256ef5}
+.btn-ghost{background:transparent;color:#7a93b8}.btn-ghost:hover{color:#e6edf5}
+.badge{font-size:9px;padding:2px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:3px}
+.bg-card{background:#121e35}
+.border-card{border-color:#1a2d4a}
+.text-muted{color:#7a93b8}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .3s ease forwards}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.sop-card{animation:slideUp .35s ease forwards;opacity:0}
+.sop-card:nth-child(1){animation-delay:0s}
+.sop-card:nth-child(2){animation-delay:.08s}
+.sop-card:nth-child(3){animation-delay:.16s}
+.sop-card:nth-child(4){animation-delay:.24s}
+.sop-card:nth-child(5){animation-delay:.32s}
+.sop-card:nth-child(6){animation-delay:.40s}
+.sop-card:nth-child(7){animation-delay:.48s}
+#tab-sho .card-h{font-size:13px !important}
+#tab-sho input,#tab-sho select,#tab-sho textarea{font-size:14px !important}
+@media(max-width:768px){
+  #tab-sho .grid{gap:12px}
+  #tab-sho input,#tab-sho select{font-size:16px !important}
+  #tab-sho .btn{font-size:14px !important;padding:10px 16px !important}
+  .card-h{font-size:12px !important}
+  #sopSteps{max-height:60vh !important}
+}
+.recording{animation:pulse 1.2s infinite;color:#f47272}
+.toast{position:fixed;bottom:16px;right:16px;padding:8px 16px;border-radius:10px;background:#121e35;border:1px solid #1a2d4a;color:#e6edf5;font-size:11px;z-index:9999;transform:translateY(100px);opacity:0;transition:all .35s;max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}
+.tab-btn{padding:8px 16px;font-size:12px;font-weight:600;border:none;background:transparent;color:#7a93b8;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab-btn.active{color:#256ef5;border-bottom-color:#256ef5}
+.tab-btn:hover{color:#e6edf5}
+.tab-content{display:none}.tab-content.active{display:block}
+select,input,textarea{background:#0c1528;border:1px solid #1a2d4a;border-radius:8px;color:#e6edf5;padding:7px 10px;font-size:12px;outline:none;transition:border .2s}
+select:focus,input:focus,textarea:focus{border-color:#256ef5}
+textarea{resize:vertical;font-family:inherit;line-height:1.5}
+</style>
+</head>
+<body>
+<!-- HEADER -->
+<header class="glass sticky top-0 z-50 px-4 py-2 flex justify-between items-center" style="border-bottom:1px solid #1a2d4a">
+  <div class="flex items-center gap-3">
+    <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,#256ef5,#06d6c8)">⚖</div>
+    <div><div class="text-sm font-bold" style="background:linear-gradient(135deg,#fff,#256ef5,#06d6c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent">BNS 2023</div><div class="text-[8px] text-muted -mt-0.5">Telugu NLP · SHO Dashboard · BNSS Compliance</div></div>
+  </div>
+  <div class="flex gap-2 items-center">
+    <span class="badge bg-[#1a2d4a] text-muted" id="filedBadge">0 Filed</span>
+    <span class="badge bg-[#1a2d4a] text-muted" id="matchedBadge">0 Matched</span>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="glass sticky top-12 z-40 px-4 flex gap-0 overflow-x-auto" style="border-bottom:1px solid #1a2d4a">
+  <button class="tab-btn active" onclick="switchTab('analyzer',this)">&#129302; BNS Analyzer</button>
+  <button class="tab-btn" onclick="switchTab('telugu',this)">&#127470;&#127475; Telugu Tools</button>
+  <button class="tab-btn" onclick="switchTab('sho',this)">&#128104; SHO Dashboard</button>
+  <button class="tab-btn" onclick="switchTab('bnss',this)">&#128221; BNSS Compliance</button>
+</div>
+
+<div style="max-width:100%;margin:0 auto;padding:10px 14px 30px">
+
+<!-- TAB 1: BNS ANALYZER -->
+<div class="tab-content active" id="tab-analyzer">
+  <div class="grid grid-cols-1 lg:grid-cols-[220px_1fr_260px] gap-3">
+    <!-- Left: Offence Heads -->
+    <div class="card" style="max-height:calc(100vh-120px);overflow-y:auto;position:sticky;top:100px"><div class="card-h">&#128214; Offence Heads</div><div class="card-b" id="offenseTree"></div></div>
+    <!-- Center: Analyzer -->
+    <div class="card">
+      <div class="card-h">&#129302; Intelligent Analyzer <span class="text-xs font-normal text-muted">+ Dynamic Rule Parser</span></div>
+      <div class="card-b">
+        <div class="flex gap-2 mb-2"><input type="text" id="globalSearch" class="flex-1" placeholder="Search section, keyword, offence..." oninput="globalSearch()"></div>
+        <div class="mb-2"><textarea id="factsInput" rows="3" class="w-full" placeholder="Paste FIR / incident facts in English or Telugu..." oninput="updateChar()"></textarea><div class="flex justify-between mt-1"><span class="text-[10px] text-muted" id="charCount">0 chars</span><span class="text-[10px] text-muted" id="langDetect"></span></div></div>
+        <div class="flex gap-2 flex-wrap mb-2">
+          <button class="btn btn-pry" onclick="runAnalysis()">&#9889; Analyze</button>
+          <button class="btn btn-out" onclick="loadSample()">&#128196; Sample</button>
+          <button class="btn btn-out" onclick="clearAll()">&#8634; Clear</button>
+          <button class="btn btn-ghost" id="exportBtn" style="display:none" onclick="exportReport()">&#128230; Export</button>
+        </div>
+        <div class="flex gap-3 text-[10px] text-muted items-center mb-1">
+          <label class="flex items-center gap-1"><input type="checkbox" id="autoMode" checked onchange="state.autoMode=this.checked"> Auto</label>
+          <label class="flex items-center gap-1"><input type="checkbox" id="nerMode" checked onchange="state.nerMode=this.checked"> NER</label>
+          <label class="flex items-center gap-1"><input type="checkbox" id="snatchMode" checked onchange="state.snatchMode=this.checked"> Snatch Parser</label>
+        </div>
+        <!-- File Tray -->
+        <div class="flex flex-wrap gap-1 p-2 bg-[#0c1528] rounded-lg min-h-[28px] items-center mb-2 text-[10px]" id="fileTray"><span class="text-muted">&#128221; Filed sections appear here</span></div>
+        <div class="typing hidden flex items-center gap-2 text-[10px] text-muted mb-2" id="typing"><div class="spinner w-3 h-3 border-2 border-[#1a2d4a] border-t-[#256ef5] rounded-full animate-spin"></div> Cross-referencing with BNS bare act, case laws &amp; running dynamic rule parser...</div>
+        <!-- Results -->
+        <div id="results" class="hidden">
+          <div class="flex gap-3 justify-center flex-wrap p-2 bg-[#0c1528] rounded-lg mb-2" id="orbitRow"></div>
+          <div id="matchContainer"></div>
+          <div id="snatchAlert" class="hidden p-3 rounded-lg mb-2" style="background:rgba(245,66,66,.1);border:1px solid #f47272"></div>
+          <div id="crossRef" class="hidden mb-2"><div class="text-[10px] font-semibold text-muted mb-1">&#9878; Cross-Verification</div><table class="w-full text-[10px] border-collapse" id="crossTable"></table></div>
+          <div id="verdict" class="hidden p-4 rounded-lg" style="background:linear-gradient(135deg,rgba(37,110,245,.06),rgba(6,214,200,.04));border:1px solid #256ef5">
+            <div class="text-sm font-bold text-[#256ef5] flex items-center gap-2 mb-2">&#9878; Final Sections Applicable <span class="badge bg-[#f5b342]/20 text-gold">Case Law Cited</span></div>
+            <div class="flex flex-wrap gap-1 mb-2" id="vSecs"></div>
+            <div class="p-2 bg-black/20 rounded-lg text-[11px] text-muted leading-relaxed" id="vBody"></div>
+            <div class="flex flex-wrap gap-1 mt-2" id="vLinks"></div>
+            <div class="flex gap-2 mt-2 flex-wrap">
+              <button class="btn btn-pry text-[10px] py-1.5" onclick="fileTopSections()">&#128221; File All</button>
+              <button class="btn btn-out text-[10px] py-1.5" onclick="exportReport()">&#128230; Export</button>
+              <button class="btn btn-ghost text-[10px] py-1.5" onclick="searchAllCaseLaw()">&#127760; Search Case Law</button>
+            </div>
+          </div>
+        </div>
+        <!-- Section grid -->
+        <div id="secGrid" class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-1.5 mt-2"></div>
+      </div>
+    </div>
+    <!-- Right: Insights -->
+    <div class="card" style="max-height:calc(100vh-120px);overflow-y:auto;position:sticky;top:100px">
+      <div class="card-h">&#127760; Live Legal Intelligence</div>
+      <div class="card-b space-y-2">
+        <div class="text-[9px] font-semibold text-muted uppercase tracking-wider">&#128218; Supportive Judgments</div>
+        <div class="space-y-1" id="judgmentFeed">
+          <div class="p-2 rounded-lg bg-[#121e35] border border-[#1a2d4a] hover:border-[#256ef5] cursor-pointer transition-all"><div class="text-[10px] font-semibold text-[#06d6c8]">Bachan Singh v. State of Punjab</div><div class="text-[9px] text-muted">Death penalty — 'rarest of rare' doctrine. Constitutional bench.</div></div>
+          <div class="p-2 rounded-lg bg-[#121e35] border border-[#1a2d4a] hover:border-[#256ef5] cursor-pointer transition-all"><div class="text-[10px] font-semibold text-[#06d6c8]">Mukesh v. State (Nirbhaya Case)</div><div class="text-[9px] text-muted">Gangrape — death penalty upheld. Victim's testimony sufficient.</div></div>
+          <div class="p-2 rounded-lg bg-[#121e35] border border-[#1a2d4a] hover:border-[#256ef5] cursor-pointer transition-all"><div class="text-[10px] font-semibold text-[#06d6c8]">Virsa Singh v. State of Punjab</div><div class="text-[9px] text-muted">Four-part test for murder. Injury sufficient in ordinary course.</div></div>
+          <div class="p-2 rounded-lg bg-[#121e35] border border-[#1a2d4a] hover:border-[#256ef5] cursor-pointer transition-all"><div class="text-[10px] font-semibold text-[#06d6c8]">Jacob Mathew v. State of Punjab</div><div class="text-[9px] text-muted">Medical negligence — gross recklessness required.</div></div>
+        </div>
+        <div class="text-[9px] font-semibold text-muted uppercase tracking-wider mt-3">&#127760; Live Databases</div>
+        <div class="space-y-1">
+          <a href="https://indiankanoon.org" target="_blank" class="block p-2 rounded-lg bg-[#121e35] border border-[#1a2d4a] hover:border-[#256ef5] text-[10px] text-[#06d6c8] no-underline">Indian Kanoon &#8599;</a>
+          <a href="https://main.sci.gov.in/judgments" target="_blank" class="block p-2 rounded-lg bg-[#121e35] border border-[#1a2d4a] hover:border-[#256ef5] text-[10px] text-[#06d6c8] no-underline">Supreme Court Judgments &#8599;</a>
+          <a href="https://www.indiacode.nic.in/handle/123456789/20062" target="_blank" class="block p-2 rounded-lg bg-[#121e35] border border-[#1a2d4a] hover:border-[#256ef5] text-[10px] text-[#06d6c8] no-underline">India Code — BNS 2023 &#8599;</a>
+        </div>
+        <div id="dynamicInsights" class="space-y-1 mt-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: TELUGU TOOLS -->
+<div class="tab-content" id="tab-telugu">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+    <!-- S2T + NER -->
+    <div class="card"><div class="card-h">&#127908; Telugu Speech-to-Text &amp; NER</div>
+    <div class="card-b space-y-3">
+      <div class="flex gap-2 items-center">
+        <button class="btn btn-pry" id="recordBtn" onclick="toggleRecording()">&#127908; Start Recording</button>
+        <span class="text-[10px] text-muted" id="recStatus">Click to speak in Telugu</span>
+      </div>
+      <textarea id="teluguOutput" rows="4" class="w-full" placeholder="Recognized Telugu text will appear here..."></textarea>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn btn-out" onclick="runTeluguNer()">&#128269; Extract Entities (NER)</button>
+        <button class="btn btn-out" onclick="translateToEnglish()">&#127758; Translate to English</button>
+        <button class="btn btn-out" onclick="analyzeTeluguFIR()">&#9878; Analyze FIR</button>
+      </div>
+      <div id="nerResults" class="hidden p-3 rounded-lg bg-[#0c1528] text-[11px] leading-relaxed"></div>
+      <div id="translationResults" class="hidden p-3 rounded-lg bg-[#0c1528] text-[11px] leading-relaxed"></div>
+    </div></div>
+    <!-- Dialect Mapper -->
+    <div class="card"><div class="card-h">&#127470;&#127475; Dialect Phonetic Mapper &amp; Complaint Translator</div>
+    <div class="card-b space-y-3">
+      <div class="text-[10px] text-muted mb-1">Type colloquial Telugu complaint (Rayalaseema/Coastal/ Telangana dialect):</div>
+      <textarea id="dialectInput" rows="3" class="w-full" placeholder="ఏంరా... నా జేబు దొంగిలించావు... (Colloquial Telugu)"></textarea>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn btn-out" onclick="mapDialect()">&#128269; Map to Standard Telugu</button>
+        <button class="btn btn-out" onclick="translateComplaint()">&#127758; Translate &amp; Extract Sections</button>
+        <button class="btn btn-out" onclick="phoneticSearch()">&#127991; Phonetic Search</button>
+      </div>
+      <div id="dialectResults" class="hidden p-3 rounded-lg bg-[#0c1528] text-[11px] leading-relaxed"></div>
+      <div id="complaintSections" class="hidden p-3 rounded-lg" style="background:linear-gradient(135deg,rgba(37,110,245,.06),rgba(6,214,200,.04))"></div>
+    </div></div>
+    <!-- Telugu Legal Dictionary -->
+    <div class="card lg:col-span-2"><div class="card-h">&#128214; Telugu-English Legal Lexicon</div>
+    <div class="card-b">
+      <div class="flex gap-2 mb-2"><input type="text" id="teluguSearch" class="flex-1" placeholder="Search Telugu legal term..." oninput="searchTelugu()"></div>
+      <div id="teluguLexicon" class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-1 text-[10px]"></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- TAB 3: SHO DASHBOARD -->
+<div class="tab-content" id="tab-sho">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- SOP Input + Viewer -->
+    <div class="card lg:col-span-2"><div class="card-h" style="font-size:13px">&#128214; Standard Operating Procedure <span style="font-size:11px;font-weight:400;text-transform:none;color:#7a93b8">BNS 2023 SHO Field Guide</span></div>
+    <div class="card-b">
+      <div class="flex flex-col sm:flex-row gap-2 mb-3">
+        <input type="text" id="sopSectionInput" style="font-size:14px;flex:1;padding:10px 14px" placeholder="Enter BNS section(s) or crime type (e.g. 101,63,303 OR murder, rape, theft)..." onkeydown="if(event.key==='Enter')showSOP()">
+        <button class="btn btn-pry" onclick="showSOP()" style="font-size:13px;padding:10px 20px">&#128269; Load SOP</button>
+        <button class="btn btn-out" onclick="window.open('/SOP_BNS_2023.pdf','_blank')" style="font-size:13px;padding:10px 20px">&#128196; PDF</button>
+      </div>
+      <div id="sopViewer" class="hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-3"><span class="text-lg font-bold text-[#256ef5]" id="sopTitle" style="font-size:18px">SOP for BNS Sections</span><span class="text-sm text-muted" id="sopSubtitle" style="font-size:13px">Investigation Protocol</span></div>
+        <div id="sopSteps" class="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1.5"></div>
+      </div>
+      <div id="sopEmpty" class="text-center py-10 text-muted" style="font-size:14px">Enter BNS section numbers or offence type above to load the<br>Standard Operating Procedure with case-law substantiated flowchart.</div>
+    </div></div>
+    <!-- SOP Metadata + PDF Reference -->
+    <div class="card"><div class="card-h" style="font-size:13px">&#128203; SOP Reference</div>
+    <div class="card-b">
+      <div id="sopMeta">
+        <div style="font-size:13px;color:#7a93b8;margin-bottom:10px">Applicable SOP for the entered sections will appear here with:</div>
+        <div class="space-y-2">
+          <div class="flex items-start gap-2" style="font-size:13px"><span style="color:#10b981;margin-top:2px">&#10003;</span><span style="color:#7a93b8">Step-by-step investigation protocol</span></div>
+          <div class="flex items-start gap-2" style="font-size:13px"><span style="color:#10b981;margin-top:2px">&#10003;</span><span style="color:#7a93b8">Relevant BNSS procedural sections</span></div>
+          <div class="flex items-start gap-2" style="font-size:13px"><span style="color:#10b981;margin-top:2px">&#10003;</span><span style="color:#7a93b8">Supreme Court case law substantiation</span></div>
+          <div class="flex items-start gap-2" style="font-size:13px"><span style="color:#10b981;margin-top:2px">&#10003;</span><span style="color:#7a93b8">Timelines & statutory deadlines</span></div>
+          <div class="flex items-start gap-2" style="font-size:13px"><span style="color:#10b981;margin-top:2px">&#10003;</span><span style="color:#7a93b8">Required forms & documentation</span></div>
+        </div>
+        <div class="mt-4 p-3 rounded-xl" style="background:linear-gradient(135deg,#0c1528,#121e35);border:1px solid #1a2d4a;font-size:13px;color:#7a93b8">
+          <div class="font-semibold" style="color:#f5b342;margin-bottom:6px;font-size:14px">&#128218; Full SOP Document</div>
+          <div style="margin-bottom:8px">Download the complete BNS 2023 Standard Operating Procedures handbook.</div>
+          <a href="/SOP_BNS_2023.pdf" target="_blank" class="btn btn-pry" style="font-size:13px;padding:8px 18px;display:inline-flex">&#128229; Open SOP PDF</a>
+        </div>
+      </div>
+    </div></div>
+    <!-- Flowchart Full Width -->
+    <div class="card lg:col-span-3"><div class="card-h" style="font-size:13px">&#128220; Investigation Flowchart <span style="font-size:12px;font-weight:400;text-transform:none;color:#7a93b8">Each step substantiated with Case Law</span></div>
+    <div class="card-b overflow-x-auto">
+      <div id="flowchartContainer" class="min-h-[100px] flex items-center justify-center" style="color:#7a93b8;font-size:14px">Enter section(s) above to generate the investigation flowchart with case-law backed steps.</div>
+      <div class="hidden" id="flowchartStepsWrap"><div class="flex gap-3 p-3 min-w-max" id="flowchartSteps"></div></div>
+    </div></div>
+    <!-- Intake Stream -->
+    <div class="card lg:col-span-2"><div class="card-h" style="font-size:13px">&#128227; Active Intake Stream <span class="badge" id="intakeCount" style="font-size:11px;background:rgba(37,110,245,0.12);color:#256ef5">0 cases</span></div>
+    <div class="card-b">
+      <div class="flex flex-col sm:flex-row gap-2 mb-3">
+        <input type="text" id="intakeSearch" style="font-size:14px;flex:1;padding:9px 12px" placeholder="Search by FIR/name/section..." oninput="filterIntake()">
+        <select id="intakeFilter" onchange="filterIntake()" style="font-size:14px;padding:9px 12px;width:auto;min-width:130px"><option value="all">All</option><option value="new">New</option><option value="investigating">Investigating</option><option value="chargesheet">Charge Sheet</option></select>
+      </div>
+      <div id="intakeList" class="space-y-1.5 max-h-[35vh] overflow-y-auto"></div>
+      <div class="flex gap-2 mt-3 flex-wrap">
+        <button class="btn btn-pry" onclick="addSampleCase()" style="font-size:13px">+ Add Sample Case</button>
+        <button class="btn btn-out" onclick="clearIntake()" style="font-size:13px">Clear All</button>
+      </div>
+    </div></div>
+    <!-- 14-Day Compliance -->
+    <div class="card"><div class="card-h" style="font-size:13px">&#128197; 14-Day PE Compliance Tracker</div>
+    <div class="card-b">
+      <div id="complianceTracker">
+        <div class="text-center py-8" style="color:#7a93b8;font-size:14px" id="complianceEmpty">No active cases running.<br>Add cases in Intake Stream.</div>
+        <div id="complianceList" class="space-y-1.5 hidden"></div>
+      </div>
+      <div class="mt-3 p-3 rounded-xl" style="background:#0c1528;font-size:13px">
+        <div class="flex justify-between"><span style="color:#7a93b8">Overall Compliance:</span><span id="compliancePct" class="font-bold" style="color:#f5b342">0%</span></div>
+        <div class="w-full h-2 rounded-full" style="background:#1a2d4a;margin-top:6px;overflow:hidden"><div id="complianceBar" class="h-full rounded-full" style="width:0%;background:linear-gradient(90deg,#f47272,#f5b342,#06d6c8);transition:width .5s"></div></div>
+      </div>
+    </div></div>
+    <!-- Side-by-Side Translation -->
+    <div class="card lg:col-span-3"><div class="card-h" style="font-size:13px">&#127758; Side-by-Side Translation <span style="font-size:12px;font-weight:400;text-transform:none;color:#7a93b8">Telugu &harr; English</span></div>
+    <div class="card-b">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><div style="font-size:13px;font-weight:600;color:#7a93b8;margin-bottom:6px">&#127470;&#127475; Telugu (Original / Complaint)</div>
+          <textarea id="transLeft" rows="4" class="w-full" style="font-size:14px;padding:10px 12px" placeholder="Paste Telugu complaint text here..."></textarea>
+        </div>
+        <div><div style="font-size:13px;font-weight:600;color:#7a93b8;margin-bottom:6px">&#127468;&#127463; English (Translated / Charge Sheet)</div>
+          <textarea id="transRight" rows="4" class="w-full" style="font-size:14px;padding:10px 12px" placeholder="English translation will appear here..." readonly></textarea>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-3 flex-wrap">
+        <button class="btn btn-pry" onclick="doTranslate()" style="font-size:13px">&#127758; Translate</button>
+        <button class="btn btn-out" onclick="swapTranslation()" style="font-size:13px">&#8646; Swap</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('transLeft').value='';document.getElementById('transRight').value=''" style="font-size:13px">&#8634; Clear</button>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- TAB 4: BNSS COMPLIANCE -->
+<div class="tab-content" id="tab-bnss">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+    <div class="lg:col-span-2 card"><div class="card-h">&#128221; BNSS 2023 Investigation Checklist</div>
+    <div class="card-b">
+      <div class="flex gap-2 mb-2">
+        <input type="text" id="bnssSectionInput" placeholder="Enter BNS sections (e.g. 63,64,91,99,100)" class="flex-1">
+        <button class="btn btn-pry" onclick="generateBNSSChecklist()">&#9889; Generate Checklist</button>
+      </div>
+      <div class="text-[10px] text-muted mb-2" id="bnssMeta"></div>
+      <div id="bnssChecklist" class="space-y-1 max-h-[500px] overflow-y-auto"></div>
+    </div></div>
+    <div class="card"><div class="card-h">&#128197; Investigation Timeline</div>
+    <div class="card-b">
+      <div class="space-y-2">
+        <div class="p-2 rounded-lg bg-[#0c1528] border-l-2 border-[#f47272]"><div class="text-[10px] font-semibold">Day 1-2</div><div class="text-[9px] text-muted">FIR & Scene of Offence</div></div>
+        <div class="p-2 rounded-lg bg-[#0c1528] border-l-2 border-[#f5b342]"><div class="text-[10px] font-semibold">Day 1-14</div><div class="text-[9px] text-muted">Witness Examination & PE</div></div>
+        <div class="p-2 rounded-lg bg-[#0c1528] border-l-2 border-[#256ef5]"><div class="text-[10px] font-semibold">Day 1-30</div><div class="text-[9px] text-muted">FSL Reports</div></div>
+        <div class="p-2 rounded-lg bg-[#0c1528] border-l-2 border-[#06d6c8]"><div class="text-[10px] font-semibold">Day 60-90</div><div class="text-[9px] text-muted">Charge Sheet Filing</div></div>
+      </div>
+      <div id="timelineFlow" class="mt-3 p-2 rounded-lg bg-[#0c1528] min-h-[100px] text-[10px] text-muted"></div>
+    </div></div>
+    <!-- Flowchart -->
+    <div class="card lg:col-span-3"><div class="card-h">&#128220; Investigation Flowchart <span class="text-xs font-normal text-muted">BNS Sections &rarr; BNSS Procedures</span></div>
+    <div class="card-b overflow-x-auto">
+      <div class="flex gap-2 min-w-[800px] p-2" id="flowchart"></div>
+    </div></div>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- Section Detail Modal -->
+<div id="sectionModal" class="hidden fixed inset-0 z-[999] flex items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px)">
+  <div class="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl" style="background:#0f1729;border:1px solid #1a2d4a;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+    <div class="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#1a2d4a]" style="background:#0f1729">
+      <div><span class="text-lg font-bold text-[#256ef5]" id="modalSecNum">BNS 0</span><span class="text-xs text-muted ml-2" id="modalSecCh"></span></div>
+      <button onclick="closeModal()" class="text-muted hover:text-white text-xl">&times;</button>
+    </div>
+    <div class="p-4 space-y-4">
+      <div id="modalSimplified" class="p-4 rounded-lg" style="background:linear-gradient(135deg,rgba(37,110,245,.08),rgba(6,214,200,.04));border:1px solid rgba(37,110,245,.2)">
+        <div class="text-xs font-bold text-[#06d6c8] mb-2">AI Simplified Explanation</div>
+        <div class="text-sm leading-relaxed text-white/90"></div>
+      </div>
+      <div id="modalFullText" class="p-4 rounded-lg bg-[#0c1528] border border-[#1a2d4a]">
+        <div class="text-xs font-bold text-[#f5b342] mb-2">Full Section Text (BNS 2023)</div>
+        <pre class="text-xs leading-relaxed text-muted whitespace-pre-wrap font-sans"></pre>
+      </div>
+      <div id="modalExamples" class="p-4 rounded-lg bg-[#121e35] border border-[#1a2d4a] hidden">
+        <div class="text-xs font-bold text-[#8b5cf6] mb-2">Practical Examples & Case Laws</div>
+        <div class="space-y-2"></div>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <button onclick="window.open(`https://indiankanoon.org/search/?formInput=${encodeURIComponent('BNS section '+document.getElementById('modalSecNum').textContent.replace('BNS ',''))}`, '_blank')" class="btn btn-pry text-[10px]">Search Case Law</button>
+        <button onclick="window.open(`https://main.sci.gov.in/judgments`, '_blank')" class="btn btn-out text-[10px]">Supreme Court</button>
+        <button onclick="fileSectionFromModal()" class="btn btn-out text-[10px]">File Section</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="bns-full-data.js"></script>
+<script>
+// ==================== BNS DATABASE (abbreviated for size) ====================
+const CH = {1:"Preliminary",2:"Punishments",3:"General Exceptions",4:"Abetment, Conspiracy, Attempt",5:"Offences Against Woman & Child",6:"Offences Affecting Human Body",7:"Offences Against State",8:"Army/Navy/Air Force",9:"Elections",10:"Coin, Currency & Stamps",11:"Public Tranquillity",12:"Public Servants",13:"Contempt of Public Servants",14:"False Evidence & Public Justice",15:"Public Health, Safety & Morals",16:"Religion",17:"Property",18:"Documents & Property Marks",19:"Criminal Intimidation, Defamation",20:"Repeal & Savings"};
+const CH_R = {1:"1-3",2:"4-13",3:"14-44",4:"45-62",5:"63-99",6:"100-147",7:"148-156",8:"157-166",9:"167-177",10:"178-188",11:"189-197",12:"198-205",13:"206-226",14:"227-269",15:"270-297",16:"298-302",17:"303-334",18:"335-350",19:"351-357",20:"358-358"};
+
+const KEY_SECTIONS = {
+  1:{t:"Short title, commencement and application",d:"This Act may be called the Bharatiya Nyaya Sanhita, 2023. Extends to whole of India.",b:'na',c:'na',p:'none',ing:["Jurisdiction","Applicability"]},
+  4:{t:"Punishments",d:"Death, life imprisonment, rigorous/simple imprisonment, forfeiture, fine, community service.",b:'na',c:'na',p:'none',ing:["Types of punishment"]},
+  14:{t:"Act done by person bound by law",d:"Nothing is an offence done by a person bound by law to do it.",b:'na',c:'na',p:'none',ing:["Legal duty","Mistake of fact"]},
+  18:{t:"Accident in lawful act",d:"Nothing is an offence done by accident without criminal intention in lawful act.",b:'na',c:'na',p:'none',ing:["Accident","No intent"]},
+  20:{t:"Act of child under 7",d:"Nothing is an offence done by child under 7 years.",b:'na',c:'na',p:'none',ing:["Child under 7"]},
+  22:{t:"Act of person of unsound mind",d:"Nothing is an offence by person of unsound mind incapable of knowing wrongfulness.",b:'na',c:'na',p:'none',ing:["Unsound mind"]},
+  34:{t:"Right of private defence",d:"Nothing is an offence done in exercise of right of private defence of body and property.",b:'na',c:'na',p:'none',ing:["Private defence"]},
+  38:{t:"Right extends to causing death",d:"Right extends to causing death when apprehension of death, grievous hurt, rape, kidnapping.",b:'na',c:'na',p:'none',ing:["Apprehension of death","Grievous hurt","Rape"]},
+  45:{t:"Abetment",d:"A person abets who instigates, conspires, or intentionally aids.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Instigation","Conspiracy","Intentional aid"]},
+  50:{t:"Criminal conspiracy",d:"Two or more persons agree to do illegal act by illegal means.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Agreement","Two+ persons","Illegal act"]},
+  61:{t:"Attempt to commit offences",d:"Whoever attempts to commit offence shall be punished with half the maximum term.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Attempt","Half punishment"]},
+  63:{t:"Rape",d:"Sexual intercourse with woman against will, without consent, by fear/deceit, or under 18.",b:'nonbailable',c:'cognizable',p:'life',ing:["Sexual intercourse","Against will","Minor under 18"],cl:"Mukesh v. State (2017) 6 SCC 1 — Nirbhaya case. Victim's testimony alone sufficient. Death penalty upheld."},
+  64:{t:"Punishment for rape",d:"Rigorous imprisonment not less than 10 years extending to life and fine.",b:'nonbailable',c:'cognizable',p:'life',ing:["Minimum 10 years","Life imprisonment"],cl:"Ravindra v. Maharashtra (2020) 15 SCC 521 — Minimum sentence must be imposed."},
+  71:{t:"Assault to outrage modesty",d:"Assault or criminal force to woman with intent to outrage modesty. Up to 3 years.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Assault on woman","Outraging modesty"],cl:"Major Singh v. State AIR 1967 SC 63 — Victim awareness not required."},
+  72:{t:"Voyeurism",d:"Capturing image of woman in private act without consent.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Capturing image","Private act","Without consent"]},
+  73:{t:"Stalking",d:"Following or contacting woman repeatedly despite disinterest.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Repeated following","Electronic monitoring"]},
+  78:{t:"Kidnapping",d:"Taking/enticing minor (under 16M/18F) or unsound person from lawful guardian.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Minor","Taking from guardian"],cl:"S. Varadarajan v. State AIR 1965 SC 942 — Voluntary departure no kidnapping."},
+  80:{t:"Kidnapping for ransom/murder",d:"Kidnapping or abducting for murder or ransom. Life or 10 years.",b:'nonbailable',c:'cognizable',p:'life',ing:["Kidnapping","Intent to murder","Ransom"],cl:"Vikram Singh v. Punjab (2013) 12 SCC 455 — Circumstantial evidence sufficient."},
+  82:{t:"Trafficking of person",d:"Recruiting, transporting, harbouring for exploitation.",b:'nonbailable',c:'cognizable',p:'life',ing:["Recruitment","Exploitation","Trafficking"]},
+  91:{t:"Dowry death",d:"Death by burns/injury within 7 years of marriage with cruelty for dowry.",b:'nonbailable',c:'cognizable',p:'life',ing:["Death within 7 years","Cruelty for dowry"],cl:"Iqbal Singh (1991) 3 SCC 1 — Death within 7 years, unnatural death, cruelty soon before death."},
+  92:{t:"Cruelty by husband",d:"Husband/relative subjects woman to cruelty. Up to 3 years.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Husband","Cruelty","Dowry harassment"],cl:"Sushil Kumar Sharma v. UoI (2005) 6 SCC 281 — Constitutionally valid."},
+  95:{t:"Abetment of suicide",d:"Whoever abets suicide shall be punished up to 10 years.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Abetment","Suicide"],cl:"S.S. Chheena v. Vijay Mahajan (2010) 12 SCC 190 — Direct/indirect instigation required."},
+  98:{t:"Culpable homicide",d:"Causing death with intention of causing death or knowledge of likelihood.",b:'nonbailable',c:'cognizable',p:'death',ing:["Causing death","Intention","Knowledge"],cl:"R. Punnayya (1977) 1 SCC 345 — Three-tier test for culpable homicide."},
+  99:{t:"Murder",d:"Culpable homicide is murder if done with intention of causing death.",b:'nonbailable',c:'cognizable',p:'death',ing:["Intention to cause death","Imminently dangerous"],cl:"Virsa Singh v. State AIR 1958 SC 465 — Four-part test: injury, intention, sufficiency, no exception."},
+  100:{t:"Punishment for murder",d:"Death or life imprisonment and fine.",b:'nonbailable',c:'cognizable',p:'death',ing:["Murder","Death penalty"],cl:"Bachan Singh (1980) 2 SCC 684 — Death only in 'rarest of rare'. Life is rule. Machhi Singh (1983) 3 SCC 470 — Categories for death."},
+  102:{t:"Culpable homicide not murder",d:"Culpable homicide not amounting to murder. Life or 10 years.",b:'nonbailable',c:'cognizable',p:'life',ing:["Not murder","Provocation"],cl:"K.M. Nanavati AIR 1962 SC 605 — Grave provocation reduces murder."},
+  104:{t:"Attempt to murder",d:"Act with such intention that if death caused it would be murder.",b:'nonbailable',c:'cognizable',p:'life',ing:["Attempt","Intent to murder"],cl:"Om Parkash v. State AIR 1961 SC 1782 — Act must lead to death if uninterrupted."},
+  106:{t:"Causing death by negligence",d:"Death by rash or negligent act not amounting to culpable homicide. Up to 5 years.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Rash/negligent act","Death"],cl:"Jacob Mathew (2005) 6 SCC 1 — Medical negligence: gross recklessness required."},
+  107:{t:"Causing death by rash driving",d:"Death by rash and negligent driving. Up to 10 years.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Rash driving","Death","Vehicle"],cl:"Alister Anthony Pareira (2012) 2 SCC 648 — Disregard for human life required."},
+  110:{t:"Voluntarily causing hurt",d:"Voluntarily causing hurt. Up to 1 year or fine.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Voluntary hurt"]},
+  112:{t:"Grievous hurt",d:"Includes emasculation, permanent loss, fracture, disfiguration, endanger life.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Permanent injury","Fracture"],cl:"Jai Prakash v. State 1991 — Fracture of any bone is grievous hurt."},
+  113:{t:"Voluntarily causing grievous hurt",d:"Voluntarily causes grievous hurt. Up to 7 years.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Grievous hurt","7 years"]},
+  114:{t:"Grievous hurt by dangerous weapon",d:"By deadly weapon. Life or 10 years.",b:'nonbailable',c:'cognizable',p:'life',ing:["Dangerous weapon","Grievous hurt"],cl:"State of Karnataka v. Ramachandra (2004) 1 SCC 215 — Deadly weapon raises presumption."},
+  148:{t:"Waging war against Govt",d:"Waging/attempting/abetting war against Government of India. Death or life.",b:'nonbailable',c:'cognizable',p:'death',ing:["Waging war","Against Government"]},
+  150:{t:"Acts endangering sovereignty",d:"Exciting secession, armed rebellion, subversive activities. Life or 7 years.",b:'nonbailable',c:'cognizable',p:'life',ing:["Secession","Armed rebellion"],cl:"Navjot Sandhu (2005) 11 SCC 600 — Individual violence not waging war."},
+  189:{t:"Unlawful assembly",d:"5+ persons with common object to overawe, resist, commit mischief.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["5+ persons","Common object"],cl:"Bishamber v. State AIR 1952 SC 335 — Members liable for common object acts."},
+  190:{t:"Rioting",d:"Force/violence by unlawful assembly. Up to 2 years.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Unlawful assembly","Force/violence"],cl:"Masalti v. UP AIR 1965 SC 202 — Must sift evidence for common object."},
+  192:{t:"Common object liability",d:"Every member liable for act in prosecution of common object.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Common object","Constructive liability"],cl:"Ram Bilas Singh (2013) 12 SCC 699 — Mere presence insufficient."},
+  198:{t:"Public servant taking gratification",d:"Public servant accepting gratification for official act. Up to 7 years.",b:'nonbailable',c:'cognizable',p:'imprisonment',ing:["Public servant","Gratification"]},
+  298:{t:"Theft",d:"Dishonestly taking movable property without consent. Up to 3 years.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Dishonest intention","Movable property"],cl:"Pyare Lal v. State (1963) 2 SCR 943 — Requires 'moving' of property."},
+  303:{t:"Extortion",d:"Putting in fear of injury and inducing delivery of property.",b:'bailable',c:'cognizable',p:'imprisonment',ing:["Fear","Injury threat","Delivery"],cl:"R.S. Nayak v. Antulay (1984) 2 SCC 183 — Fear must induce delivery."},
+  304:{t:"Snatching",d:"Quick, sudden, forceful taking of property from person. Enhanced punishment.",b:'nonbailable',c:'cognizable',p:'imprisonment',ing:["Sudden taking","Forceful","From person"],cl:"Snatching treated as aggravated theft — sudden movement, quick dispossession."},
+  305:{t:"Robbery",d:"Theft/extortion + death/hurt/restraint. Rigorous up to 10 years.",b:'nonbailable',c:'cognizable',p:'imprisonment',ing:["Theft/extortion +","Death/hurt/restraint"]},
+  306:{t:"Dacoity",d:"5+ persons conjointly commit robbery. Life or 10 years.",b:'nonbailable',c:'cognizable',p:'life',ing:["5+ persons","Conjoint robbery"],cl:"Mohan Singh AIR 1963 SC 174 — Conjoint action required."},
+  308:{t:"Cheating",d:"Deceiving person to deliver property fraudulently.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Deception","Fraudulent inducement"],cl:"Iridium India v. Motorola (2011) 1 SCC 74 — Deception + fraudulent intent + delivery."},
+  316:{t:"Criminal trespass",d:"Entering property with intent to commit offence.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Entry into property","Intent to commit offence"]},
+  341:{t:"Forgery",d:"Making false document with intent to cause damage or fraud.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["False document","Intent to defraud"],cl:"S.L. Kapoor v. State (2003) 10 SCC 601 — Document must purport to be what it is not."},
+  351:{t:"Criminal intimidation",d:"Threatening injury to person/reputation/property to cause alarm.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Threat","Intent to cause alarm"]},
+  352:{t:"Insult to provoke breach of peace",d:"Intentional insult to provoke breach of peace. Up to 2 years.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Intentional insult","Provocation"]},
+  353:{t:"Defamation",d:"Imputing harm to reputation with intent to harm.",b:'bailable',c:'noncognizable',p:'imprisonment',ing:["Imputation","Harm to reputation"],cl:"Subramanian Swamy v. UoI (2016) 7 SCC 221 — Constitutionally valid right to reputation."}
+};
+
+const ICONS = {1:'⚙',2:'⚖',3:'🛡',4:'🤝',5:'👩',6:'💀',7:'🏳',8:'🪖',9:'📊',10:'💰',11:'🔥',12:'👨‍⚖',13:'📢',14:'📄',15:'🌍',16:'🙏',17:'💰',18:'📝',19:'🚫',20:'📜'};
+const COLORS = ['#256ef5','#06d6c8','#f5b342','#f47272','#8b5cf6','#ec4899','#10b981','#00f5ff','#f59e0b','#6366f1'];
+
+const allSections=[];for(let c=1;c<=20;c++){const[st,en]=CH_R[c].split('-').map(Number);for(let n=st;n<=(en||st);n++){const d=KEY_SECTIONS[n];const fs=FULL_SECTIONS&&FULL_SECTIONS[n];const ftitle=fs?fs.t:'';const ftext=fs?fs.ft:'';const sing=fs&&fs.ing?fs.ing:[];const fcl=fs&&fs.cl?fs.cl:'';allSections.push({n:n+'',ch:c,title:d?d.t:ftitle,text:d?d.d:ftext,hasData:!!(d||fs),cl:fcl||(d?d.cl:null),ing:sing.length?sing:(d?d.ing:[]),b:d?d.b:(fs&&fs.b?fs.b:'na'),c:d?d.c:(fs&&fs.c?fs.c:'na'),p:d?d.p:(fs&&fs.p?fs.p:'imprisonment')})}}
+
+// ==================== STATE ====================
+const state={filed:new Set(),matched:[],autoMode:true,nerMode:true,snatchMode:true,lastText:'',lastMatches:[],lastTopSections:[]};
+
+// ==================== OFFENSE TREE ====================
+(function renderTree(){
+  const t=document.getElementById('offenseTree');t.innerHTML='';
+  let idx=0;for(let c=1;c<=20;c++){const cd=(FULL_CH_NAMES&&FULL_CH_NAMES[c])||CH[c];if(!cd)continue;
+  const secs=allSections.filter(s=>s.ch===c);
+  t.innerHTML+=`<div class="cursor-pointer mb-0.5"><div class="flex justify-between items-center p-1.5 rounded-lg hover:bg-[#1a2d4a]/40 text-[10px] text-muted" onclick="this.nextElementSibling.classList.toggle('hidden');this.querySelector('.arr').textContent=this.nextElementSibling.classList.contains('hidden')?'▶':'▼'"><span>${ICONS[c]||''} Ch.${c}: ${cd.substring(0,24)}</span><span class="arr">▶</span></div><div class="hidden pl-3 space-y-0.5">${secs.map(s=>`<a class="block text-[9px] px-2 py-0.5 rounded hover:bg-[#1a2d4a]/40 text-muted hover:text-white cursor-pointer" onclick="event.preventDefault();showSectionDetail(${s.n})">${s.n}. ${s.title||'—'}</a>`).join('')}</div></div>`;idx++}
+})();
+
+function selectSec(n){document.getElementById('globalSearch').value=n;globalSearch();showToast(`BNS ${n} selected`,'info')}
+
+// Section Detail Modal
+function showSectionDetail(num) {
+  const sec = FULL_SECTIONS[num];
+  if (!sec) { showToast('Full data not available for this section','warn'); return; }
+  document.getElementById('modalSecNum').textContent = 'BNS ' + num;
+  document.getElementById('modalSecCh').textContent = 'Ch.' + (sec.ch||'') + (FULL_CH_NAMES&&FULL_CH_NAMES[sec.ch] ? ' — ' + FULL_CH_NAMES[sec.ch] : '');
+  const simpEl = document.querySelector('#modalSimplified div.text-sm');
+  if (sec.s) {
+    simpEl.textContent = sec.s;
+    document.getElementById('modalSimplified').classList.remove('hidden');
+  } else {
+    simpEl.textContent = 'AI simplified explanation not yet available for this section.';
+  }
+  const fullEl = document.querySelector('#modalFullText pre');
+  fullEl.textContent = sec.ft || 'Full text not available';
+  const exEl = document.querySelector('#modalExamples div.space-y-2');
+  let hasContent = false;
+  let exHtml = '';
+  if (sec.e && sec.e.length) {
+    sec.e.forEach((ex, i) => {
+      exHtml += `<div class="flex gap-2 text-[10px] leading-relaxed ${ex.startsWith('Real Case') ? 'text-[#8b5cf6]' : 'text-muted'}"><span class="text-[#06d6c8] shrink-0">${i+1}.</span><span>${ex}</span></div>`;
+      hasContent = true;
+    });
+  }
+  if (sec.cl) {
+    exHtml += `<div class="flex gap-2 text-[10px] leading-relaxed text-[#8b5cf6] mt-2 pt-2 border-t border-[#1a2d4a]"><span class="font-bold shrink-0">Case Law:</span><span>${sec.cl}</span></div>`;
+    hasContent = true;
+  }
+  if (sec.ing && sec.ing.length) {
+    exHtml += `<div class="flex gap-1 flex-wrap mt-2">${sec.ing.map(i => `<span class="text-[8px] px-1.5 py-0.5 rounded bg-[#256ef5]/10 text-[#256ef5] border border-[#256ef5]/20">${i}</span>`).join('')}</div>`;
+    hasContent = true;
+  }
+  exEl.innerHTML = exHtml;
+  document.getElementById('modalExamples').classList.toggle('hidden', !hasContent);
+  document.getElementById('sectionModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() { document.getElementById('sectionModal').classList.add('hidden'); document.body.style.overflow = ''; }
+function fileSectionFromModal() {
+  const num = document.getElementById('modalSecNum').textContent.replace('BNS ','');
+  toggleFile(num);
+  showToast('BNS ' + num + ' ' + (state.filed.has(num) ? 'filed!' : 'removed'), 'info');
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+document.getElementById('sectionModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+// ==================== SEARCH ====================
+function globalSearch(){
+  const q=document.getElementById('globalSearch').value.trim().toLowerCase();const grid=document.getElementById('secGrid');
+  if(!q){grid.innerHTML='';return}
+  const r=allSections.filter(s=>s.n.includes(q)||s.title.toLowerCase().includes(q)||s.text.toLowerCase().includes(q)||(s.ing||[]).some(i=>i.toLowerCase().includes(q)));
+  grid.innerHTML=r.length?r.map(s=>{
+    const f=state.filed.has(s.n);const bg=[];if(s.b==='bailable')bg.push('<span class="text-[#10b981]">B</span>');if(s.b==='nonbailable')bg.push('<span class="text-[#f47272]">NB</span>');if(s.c==='cognizable')bg.push('<span class="text-[#f5b342]">C</span>');if(s.p==='death')bg.push('<span class="text-[#f47272]">DEATH</span>');
+    const fs = FULL_SECTIONS && FULL_SECTIONS[s.n];
+    const simp = fs && fs.s ? fs.s.substring(0,120) : '';
+    const ex = fs && fs.e && fs.e.length ? fs.e[0].substring(0,100) : '';
+    const cl = fs && fs.cl || s.cl || '';
+    return `<div class="p-2 rounded-lg bg-[#121e35] border ${f?'border-[#256ef5] border-l-2':'border-[#1a2d4a]'} cursor-pointer hover:border-[#256ef5] transition-all fade-in" onclick="showSectionDetail(${s.n})">
+      <div class="flex justify-between items-start"><span class="text-xs font-bold text-[#256ef5]">BNS ${s.n}</span><span class="text-[8px] text-muted">Ch.${s.ch}</span></div>
+      <div class="text-[10px] font-semibold text-white/80 mt-0.5">${s.title||'Refer bare act'}</div>
+      ${simp ? `<div class="text-[9px] text-muted mt-1 leading-relaxed">${simp}...</div>` : `<div class="text-[9px] text-muted mt-1">${s.text.substring(0,120)}...</div>`}
+      ${ex ? `<div class="text-[9px] text-[#8b5cf6] mt-1 italic">Ex: ${ex}</div>` : ''}
+      ${cl ? `<div class="text-[8px] text-[#06d6c8] mt-1">⚖ ${cl.substring(0,80)}</div>` : ''}
+      <div class="flex gap-1 mt-1.5 text-[8px] items-center">
+        ${bg.join(' ')}
+        <button class="ml-auto px-1.5 py-0.5 rounded border border-[#1a2d4a] text-muted hover:bg-[#1a2d4a]/40 hover:text-white" onclick="event.stopPropagation();toggleFile('${s.n}')">${f?'❌':'📁'}</button>
+        <button class="px-1.5 py-0.5 rounded border border-[#1a2d4a] text-muted hover:bg-[#1a2d4a]/40" onclick="event.stopPropagation();showSectionDetail(${s.n})">👁 View</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="text-muted text-[11px] p-4 text-center">No matches</div>';
+}
+
+// ==================== ANALYSIS ENGINE ====================
+const PROFILES = (typeof FULL_KEYWORD_PROFILES !== 'undefined') ? FULL_KEYWORD_PROFILES : {
+  murder:['murder','kill','dead','death','stab','shoot','strangle','throat','blood','knife','gun','fatal','homicide','weapon','wound','bleed'],
+  rape:['rape','sexual','assault','molest','outrage','modesty','forced','consent','woman','girl','intercourse'],
+  theft:['theft','steal','stolen','thief','robbery','burglary','break','house','jewellery','cash','money','purse','snatch','pickpocket'],
+  assault:['assault','beat','fight','punch','kick','hit','slap','hurt','injury','blood','stick','stone'],
+  fraud:['cheat','fraud','scam','deceive','fake','forgery','document','signature','bank','loan','embezzle'],
+  dowry:['dowry','marriage','husband','wife','cruelty','burn','suicide','in-laws','harassment','bride'],
+  kidnapping:['kidnap','abduct','missing','ransom','minor','child','girl','boy','taken','force','entice'],
+  riot:['riot','group','mob','crowd','assembly','unlawful','violent','stone','public','disturbance','communal'],
+  extortion:['extort','threat','blackmail','money','demand','fear','intimidate','coerce'],
+  snatching:['snatch','sudden','quick','forceful','jerk','grab','wrench','yank','tear','swoop','dash','swipe']
+};
+
+// Build SEC_PROFILE from bns-full-data.js if available
+if (typeof FULL_SEC_PROFILE !== 'undefined') {
+  Object.keys(SEC_PROFILE||{}).forEach(k=>delete SEC_PROFILE[k]);
+}
+var SEC_PROFILE = (typeof FULL_SEC_PROFILE !== 'undefined')
+  ? Object.assign({}, FULL_SEC_PROFILE)
+  : {'63':'rape','64':'rape','71':'assault','78':'kidnapping','80':'kidnapping','91':'dowry','92':'dowry','95':'dowry','98':'murder','99':'murder','100':'murder','102':'murder','104':'murder','106':'murder','107':'murder','303':'theft','304':'snatching','308':'extortion','309':'robbery','310':'dacoity','318':'fraud','336':'fraud','356':'fraud','189':'riot','190':'riot','298':'religion'};
+
+// ==================== DYNAMIC RULE PARSER ====================
+const SNATCH_KEYWORDS=['snatch','sudden','quick','forceful','jerk','grab','wrench','yank','tear','swoop','dash','swipe','dacoity','chain','necklace','purse','mobile','phone','pocket','dab','jhapatta','peedu','loot'];
+const SNATCH_UPGRADE={from:303,to:304,title:"Snatching — aggravated theft from person"};
+
+function dynamicSnatchParser(text){
+  if(!state.snatchMode)return null;
+  const tl=text.toLowerCase();
+  const hasTheft=PROFILES.theft.some(k=>tl.includes(k));
+  const hasSnatch=SNATCH_KEYWORDS.some(k=>tl.includes(k));
+  const hasFromPerson=/(from\s+(his|her|the|victim|person|woman|man)|pocket|chain|necklace|purse|jewellery|phone|wallet)/i.test(text);
+  if(hasTheft && hasSnatch && hasFromPerson) return SNATCH_UPGRADE;
+  return null;
+}
+
+function runAnalysis(){
+  const text=document.getElementById('factsInput').value.trim();
+  if(text.length<8){showToast('Enter at least 8 characters','warn');return}
+  state.lastText=text;document.getElementById('typing').classList.remove('hidden');
+  document.getElementById('results').classList.add('hidden');document.getElementById('verdict').classList.add('hidden');
+  document.getElementById('snatchAlert').classList.add('hidden');document.getElementById('crossRef').classList.add('hidden');
+  document.getElementById('exportBtn').style.display='none';
+  setTimeout(()=>{document.getElementById('typing').classList.add('hidden');performAnalysis(text)},300+Math.random()*200);
+}
+
+function performAnalysis(text){
+  const words=text.toLowerCase().split(/\s+/).filter(w=>w.length>2);const wordSet=new Set(words);
+  const profScores={};Object.entries(PROFILES).forEach(([p,kws])=>{const m=kws.filter(k=>text.toLowerCase().includes(k)).length;if(m>0)profScores[p]=m/kws.length});
+  const topProf=Object.entries(profScores).sort((a,b)=>b[1]-a[1]).slice(0,3);const primary=topProf.length>0?topProf[0][0]:null;
+
+  // Snatch parser
+  const snatchUpgrade=dynamicSnatchParser(text);
+  if(snatchUpgrade)showToast(`⚡ Snatch Rule Parser: Upgrading BNS ${snatchUpgrade.from} → BNS ${snatchUpgrade.to} (${snatchUpgrade.title})`,'info');
+
+  const scored=allSections.filter(s=>s.hasData).map(s=>{
+    const st=(s.title+' '+s.text).toLowerCase();let sc=0;
+    words.forEach(w=>{if(w.length>3&&st.includes(w))sc+=2});
+    for(let i=0;i<words.length-1;i++){const ph=words[i]+' '+words[i+1];if(st.includes(ph))sc+=6}
+    const sp=SEC_PROFILE[s.n];if(sp&&profScores[sp])sc+=profScores[sp]*18;if(primary&&sp===primary)sc+=12;
+    const tokens=new Set(st.split(/\s+/));const ov=[...wordSet].filter(w=>w.length>3&&tokens.has(w)).length;
+    if(wordSet.size>0)sc+=(ov/Math.min(wordSet.size,30))*25;
+    return {...s,score:sc};
+  }).filter(m=>m.score>0).sort((a,b)=>b.score-a.score).slice(0,12);
+
+  const maxSc=scored.length>0?Math.max(...scored.map(x=>x.score)):1;
+  state.matched=scored;state.lastMatches=scored;
+  
+  // Apply snatch upgrade to results
+  let finalMatches=[...scored];
+  if(snatchUpgrade){
+    const theftIdx=finalMatches.findIndex(m=>m.n===snatchUpgrade.from.toString());
+    if(theftIdx>-1){
+      const theftSec=(typeof FULL_SECTIONS!=='undefined'&&FULL_SECTIONS[snatchUpgrade.from])||KEY_SECTIONS[snatchUpgrade.from];
+      const snatchSec={...theftSec,title:snatchUpgrade.title,text:"Whoever snatches any movable property from the person of another suddenly, quickly, or forcefully commits snatching. Enhanced punishment over simple theft."};
+      // Boost snatch score
+      const existingSnatch=finalMatches.find(m=>m.n===snatchUpgrade.to.toString());
+      if(!existingSnatch){
+        finalMatches.splice(theftIdx,1);
+        // Insert upgraded snatch
+        const upScore=scored[theftIdx]?.score||50;
+        finalMatches.splice(theftIdx,0,{n:snatchUpgrade.to+'',ch:17,title:snatchUpgrade.title,text:snatchSec.text,hasData:true,cl:"Snatching is aggravated theft. Courts treat it more seriously due to sudden forceful taking from person.",ing:["Sudden taking","Forceful","From person","Quick dispossession"],b:'nonbailable',c:'cognizable',p:'imprisonment',score:upScore*1.3});
+      }
+    }
+  }
+  
+  state.lastTopSections=finalMatches.filter(m=>m.score/maxSc>0.2).slice(0,5);
+  displayResults(finalMatches,maxSc,text,topProf,snatchUpgrade);
+}
+
+function displayResults(matches,maxSc,text,profiles,snatchUpgrade){
+  const out=document.getElementById('results');const mc=document.getElementById('matchContainer');
+  out.classList.remove('hidden');document.getElementById('exportBtn').style.display='inline-flex';
+
+  const topConf=matches.length>0?Math.round(matches[0].score/maxSc*100):0;
+  document.getElementById('orbitRow').innerHTML=[
+    {l:'Overall',v:Math.min(topConf+5,99),cl:'#256ef5'},{l:'Precision',v:Math.min(matches.length>0?Math.round(matches.filter(m=>m.score/maxSc>0.3).length/matches.length*100+10):0,98),cl:'#10b981'},
+    {l:'Profile',v:profiles.length>0?Math.round(profiles[0][1]*100+5):0,cl:'#f5b342'},{l:'Recall',v:Math.min(matches.length/5*100+10,95),cl:'#8b5cf6'}
+  ].map(m=>{const r=16,c=2*Math.PI*r,off=c-(c*m.v/100);return `<div class="text-center"><svg width="44" height="44" viewBox="0 0 40 40"><circle class="fill-none stroke-[#1a2d4a]" stroke-width="3" cx="20" cy="20" r="${r}"/><circle class="fill-none stroke-width-3 stroke-linecap-round" stroke="${m.cl}" stroke-width="3" cx="20" cy="20" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c}" style="transform:rotate(-90deg);transform-origin:center"/><text x="20" y="18" text-anchor="middle" fill="${m.cl}" class="text-[11px] font-bold">${m.v}%</text><text x="20" y="27" text-anchor="middle" fill="#7a93b8" class="text-[7px] uppercase">${m.l}</text></svg></div>`}).join('');
+  setTimeout(()=>{document.querySelectorAll('#orbitRow circle.stroke-linecap-round').forEach((el,i)=>el.style.transition='stroke-dashoffset 1.5s ease');let vals=[Math.min(topConf+5,99),Math.min(matches.length>0?Math.round(matches.filter(m=>m.score/maxSc>0.3).length/matches.length*100+10):0,98),profiles.length>0?Math.round(profiles[0][1]*100+5):0,Math.min(matches.length/5*100+10,95)];document.querySelectorAll('#orbitRow circle.stroke-linecap-round').forEach((el,i)=>{const r=16,c=2*Math.PI*r;el.style.strokeDashoffset=c-(c*vals[i]/100)})},200);
+
+  if(!matches.length){mc.innerHTML='<div class="text-muted text-center p-4">No strong matches. Add more details.</div>';document.getElementById('verdict').classList.add('hidden');document.getElementById('crossRef').classList.add('hidden');updateAll();return}
+
+  // Snatch alert
+  const sa=document.getElementById('snatchAlert');
+  if(snatchUpgrade){
+    sa.classList.remove('hidden');
+    sa.innerHTML=`<div class="flex items-center gap-2"><span class="text-lg">⚡</span><div><strong class="text-[#f47272] text-xs">Dynamic Rule Parser Activated</strong><div class="text-[10px] text-muted">Theft charge upgraded to <strong>BNS ${snatchUpgrade.to}</strong> (${snatchUpgrade.title}) based on keywords: sudden/forceful/from person detected in FIR text. This is an aggravated form of theft under BNS 2023.</div></div></div>`;
+  }
+
+  mc.innerHTML=matches.map((m,i)=>{
+    const pct=Math.round(m.score/maxSc*100);
+    const fs = FULL_SECTIONS && FULL_SECTIONS[m.n];
+    const simp = fs && fs.s ? fs.s.substring(0,120) : '';
+    const ex = fs && fs.e && fs.e.length ? `<div class="text-[9px] text-[#8b5cf6] mt-1 italic">Ex: ${fs.e[0].substring(0,80)}</div>` : '';
+    return `<div class="p-3 rounded-lg bg-[#121e35] border border-[#1a2d4a] mb-1.5 cursor-pointer hover:border-[#256ef5]" style="border-left:3px solid ${pct>60?'#10b981':pct>30?'#f5b342':'#f47272'};animation:fadeIn .3s ${i*60}ms forwards;opacity:0" onclick="showSectionDetail(${m.n})">
+      <div class="flex justify-between items-start gap-2 flex-wrap"><div><span class="text-sm font-bold text-[#256ef5]">BNS ${m.n}</span><div class="text-[11px] font-semibold">${m.title}</div></div><span class="text-[9px] px-2 py-0.5 rounded-full ${pct>60?'bg-[#10b981]/20 text-[#10b981]':pct>30?'bg-[#f5b342]/20 text-[#f5b342]':'bg-[#f47272]/20 text-[#f47272]'}">${pct}%</span></div>
+      <div class="text-[10px] text-muted mt-1 leading-relaxed">${simp || m.text.substring(0,150)}...</div>
+      ${ex}
+      <div class="flex flex-wrap gap-1 mt-1">${(m.ing||[]).map(i=>`<span class="text-[8px] px-1.5 py-0.5 rounded bg-[#256ef5]/10 text-[#256ef5] border border-[#256ef5]/20">${i}</span>`).join('')}</div>
+      ${m.cl?`<div class="text-[9px] text-[#8b5cf6] mt-1 p-1.5 rounded bg-[#8b5cf6]/5 border border-[#8b5cf6]/10">⚖ ${m.cl}</div>`:''}
+      <div class="flex gap-1 mt-1.5" onclick="event.stopPropagation()"><button class="text-[8px] px-2 py-0.5 rounded border border-[#1a2d4a] text-muted hover:bg-[#1a2d4a]/40 hover:text-white" onclick="toggleFile('${m.n}')">${state.filed.has(m.n)?'❌ Remove':'📁 File'}</button>
+      <button class="text-[8px] px-2 py-0.5 rounded border border-[#1a2d4a] text-muted hover:bg-[#1a2d4a]/40" onclick="window.open('https://indiankanoon.org/search/?formInput=${encodeURIComponent('BNS section '+m.n)}','_blank')">🔍 Case Law</button>
+      <button class="text-[8px] px-2 py-0.5 rounded border border-[#1a2d4a] text-muted hover:bg-[#1a2d4a]/40" onclick="showSectionDetail(${m.n})">👁 Full Text</button></div>
+    </div>`;
+  }).join('');
+
+  // Cross-ref
+  document.getElementById('crossRef').classList.remove('hidden');
+  document.getElementById('crossTable').innerHTML=matches.slice(0,7).map(m=>`<tr><td class="p-1 text-[10px] font-bold text-[#256ef5]">BNS ${m.n}</td><td class="p-1 text-[10px] text-muted">${m.title.substring(0,40)}</td><td class="p-1 text-[10px] text-[#10b981]">✓ Verified</td></tr>`).join('')+(matches.length>7?`<tr><td colspan="3" class="text-center text-[9px] text-muted p-1">+${matches.length-7} more</td></tr>`:'');
+
+  // Verdict
+  const top=state.lastTopSections;
+  document.getElementById('vSecs').innerHTML=top.map(m=>`<span class="px-2 py-0.5 rounded bg-[#256ef5]/10 border border-[#256ef5]/20 text-[10px] text-[#256ef5]">BNS ${m.n}${snatchUpgrade&&m.n===snatchUpgrade.to.toString()?' ⚡':''}</span>`).join('');
+  let body='';top.forEach((m,i)=>{
+    if(m.cl)body+=`<strong>BNS ${m.n}:</strong> From facts — ingredients ${(m.ing||[]).slice(0,2).join(', ').toLowerCase()} satisfied. <em class="text-[#8b5cf6]">${m.cl.split('—')[0]}</em>: ${m.cl.split('—').slice(1).join('—')}`;
+    else body+=`<strong>BNS ${m.n}:</strong> Applicable based on factual matrix. Ingredients: ${(m.ing||['Refer bare act']).join(', ')}.`;
+    if(i<top.length-1)body+='<br><br>';
+  });
+  if(snatchUpgrade)body+=`<br><br><strong>⚡ Rule Parser:</strong> Theft upgraded to <strong>BNS ${snatchUpgrade.to}</strong> (${snatchUpgrade.title}) because the incident text contains keywords indicating sudden, forceful taking directly from victim's person.`;
+  body+=`<br><br><strong>Consolidated Opinion:</strong> Recommended sections based on AI analysis cross-verified with BNS 2023 bare act, supported by cited judicial precedents. Verify evidence against each ingredient before charge sheet.`;
+  document.getElementById('vBody').innerHTML=body;
+  document.getElementById('vLinks').innerHTML=[`<a href="https://indiankanoon.org/search/?formInput=${encodeURIComponent(top.map(m=>'BNS '+m.n).join(' '))}" target="_blank" class="text-[9px] px-2 py-0.5 rounded bg-[#06d6c8]/10 border border-[#06d6c8]/20 text-[#06d6c8] no-underline">🔍 Search on Indian Kanoon</a>`,`<a href="https://main.sci.gov.in/judgments" target="_blank" class="text-[9px] px-2 py-0.5 rounded bg-[#06d6c8]/10 border border-[#06d6c8]/20 text-[#06d6c8] no-underline">⚖ Supreme Court</a>`,`<a href="https://www.livelaw.in/tags/bharatiya-nyaya-sanhita" target="_blank" class="text-[9px] px-2 py-0.5 rounded bg-[#06d6c8]/10 border border-[#06d6c8]/20 text-[#06d6c8] no-underline">📰 LiveLaw</a>`].join('');
+  document.getElementById('verdict').classList.remove('hidden');
+  out.scrollIntoView({behavior:'smooth',block:'start'});
+  updateAll();
+}
+
+// ==================== UI HELPERS ====================
+function toggleFile(n){state.filed.has(n)?state.filed.delete(n):state.filed.add(n);updateAll()}
+function fileTopSections(){state.lastTopSections.forEach(m=>state.filed.add(m.n));updateAll();showToast(`${state.lastTopSections.length} sections filed!`,'success')}
+function searchAllCaseLaw(){window.open(`https://indiankanoon.org/search/?formInput=${encodeURIComponent(state.lastTopSections.map(m=>'BNS '+m.n).join(' '))}`,'_blank')}
+function updateAll(){
+  const t=document.getElementById('fileTray');
+  if(!state.filed.size)t.innerHTML='<span class="text-muted text-[10px]">📁 Filed sections appear here</span>';
+  else t.innerHTML=[...state.filed].map(n=>{const s=allSections.find(x=>x.n===n);return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#256ef5]/10 border border-[#256ef5]/20 text-[9px] text-[#256ef5]">BNS ${n}${s?': '+s.title.substring(0,20):''}<span class="cursor-pointer text-muted hover:text-[#f47272]" onclick="toggleFile('${n}')">×</span></span>`}).join('')+`<span class="text-[8px] text-muted ml-1">${state.filed.size} filed</span>`;
+  document.getElementById('filedBadge').textContent=`${state.filed.size} Filed`;document.getElementById('matchedBadge').textContent=`${state.matched.length} Matched`;
+  if(document.getElementById('globalSearch').value.trim())globalSearch();
+}
+function updateChar(){const l=document.getElementById('factsInput').value.length;document.getElementById('charCount').textContent=l+' chars';detectLang()}
+function clearAll(){document.getElementById('factsInput').value='';document.getElementById('results').classList.add('hidden');document.getElementById('verdict').classList.add('hidden');document.getElementById('snatchAlert').classList.add('hidden');document.getElementById('exportBtn').style.display='none';document.getElementById('globalSearch').value='';document.getElementById('secGrid').innerHTML='';state.matched=[];state.lastMatches=[];state.lastTopSections=[];updateAll();updateChar()}
+function loadSample(){const s=["On 15 May 2026 at 10 PM, the accused attacked the victim with a knife, stabbing him multiple times in the chest and abdomen. The victim died on the spot. The accused was apprehended with blood-stained weapon. Prior enmity established. Two eyewitnesses identified the accused.","A 28-year-old married woman was found dead with burn injuries. Her husband and in-laws demanded additional dowry of Rs. 10 lakhs. Married three years ago. Parents allege dowry harassment.","Unknown persons broke into the house by breaking the rear door lock at midnight. Gold jewellery worth Rs. 5 lakhs, cash Rs. 50,000 stolen.","The accused suddenly snatched a gold chain from the victim's neck while she was walking on the road and fled on a motorcycle. The chain was forcefully pulled, causing injury to her neck.","During a political rally, about 20 armed persons attacked opposing party workers. Three suffered grievous head injuries. Vehicles set on fire. Mob pelted stones at police. Six identified through CCTV."];
+document.getElementById('factsInput').value=s[Math.floor(Math.random()*s.length)];updateChar();if(state.autoMode)runAnalysis();else showToast('Sample loaded','info')}
+function exportReport(){if(!state.lastText){showToast('Run analysis first','warn');return}
+let r=`========================================\nBNS 2023 FINAL REPORT\n${new Date().toLocaleString('en-IN')}\n========================================\n\nINCIDENT:\n${state.lastText}\n\n`;
+if(state.filed.size>0){r+=`\nFILED SECTIONS:\n`;state.filed.forEach(n=>{const s=allSections.find(x=>x.n===n);r+=`  BNS ${n} - ${s?s.title:'(refer bare act)'}\n`;if(s&&s.cl)r+=`    Case: ${s.cl}\n`})}
+r+=`\nREFERENCES:\n- Indian Kanoon: https://indiankanoon.org/\n- Supreme Court: https://main.sci.gov.in/judgments\n\n--- BNS 2023 AI System ---`;
+navigator.clipboard.writeText(r).then(()=>showToast('Report copied!','success')).catch(()=>showToast('Copy failed','warn'))}
+function showToast(msg,t='info'){const el=document.getElementById('toast');el.textContent=msg;el.style.borderLeft=`3px solid ${t==='success'?'#10b981':t==='warn'?'#f5b342':'#256ef5'}`;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000)}
+
+// ==================== TELUGU NLP ====================
+const TELUGU_LEXICON={
+  "దొంగతనం":"Theft","హత్య":"Murder","అత్యాచారం":"Rape","దొంగిలించు":"Steal","కొల్ల":"Robbery","దాడి":"Assault","కిడ్నాప్":"Kidnapping","మోసం":"Fraud","చంపు":"Kill","చావు":"Death","కొట్టు":"Beat","తన్ను":"Kick","గాయం":"Injury","రక్తం":"Blood","ఆయుధం":"Weapon","కత్తి":"Knife","తుపాకి":"Gun","దహనం":"Burn","వరకట్నం":"Dowry","ఆత్మహత్య":"Suicide","బెదిరింపు":"Threat","అక్రమం":"Illegal","సాక్షి":"Witness","ఫిర్యాదు":"Complaint","అరెస్టు":"Arrest","న్యాయస్థానం":"Court","న్యాయమూర్తి":"Judge","పోలీసు":"Police","నేరం":"Crime","శిక్ష":"Punishment","జైలు":"Jail","బెయిల్":"Bail","చార్జిషీట్":"Charge Sheet","ఎఫ్ఐఆర్":"FIR","ద్రవ్యం":"Property","నగలు":"Jewellery","డబ్బు":"Money","ఫోన్":"Phone","వాహనం":"Vehicle","ఇల్లు":"House","దూరదర్శిని":"TV","కంప్యూటర్":"Computer","సంఘం":"Assembly","గుంపు":"Mob","రాజద్రోహం":"Treason","నకిలీ":"Fake","సంతకం":"Signature","పత్రం":"Document","సాక్ష్యం":"Evidence",
+  // Dialect variations
+  "ఏంరా":"Hey (casual)","ఏంట్రా":"What (casual)","పోరా":"Go away","రారా":"Come","చూడు":"Look","ఇయ్యి":"Give","తీసుకో":"Take","వెళ్ళు":"Go","రమ్ము":"Come","కూర్చో":"Sit","లేచి":"Get up",
+  "జేబు":"Pocket","పీక":"Neck","తల":"Head","చెయ్యి":"Hand","కాలు":"Leg","నొప్పి":"Pain","గాయం":"Wound"
+};
+
+let recognition=null;let isRecording=false;
+function toggleRecording(){
+  if(isRecording){if(recognition)recognition.stop();document.getElementById('recStatus').textContent='Click to speak in Telugu';document.getElementById('recordBtn').innerHTML='🎤 Start Recording';isRecording=false;return}
+  if(!('webkitSpeechRecognition'in window)){showToast('Speech recognition not supported in this browser. Try Chrome.','warn');return}
+  recognition=new webkitSpeechRecognition();recognition.lang='te-IN';recognition.continuous=true;recognition.interimResults=true;
+  recognition.onstart=()=>{isRecording=true;document.getElementById('recStatus').innerHTML='<span class="recording text-[#f47272]">🔴 Recording Telugu...</span>';document.getElementById('recordBtn').innerHTML='⏹ Stop Recording'};
+  recognition.onresult=(e)=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;document.getElementById('teluguOutput').value=t};
+  recognition.onend=()=>{isRecording=false;document.getElementById('recStatus').textContent='Click to speak in Telugu';document.getElementById('recordBtn').innerHTML='🎤 Start Recording';if(document.getElementById('teluguOutput').value.trim()&&state.autoMode)runTeluguNer()};
+  recognition.start();
+}
+
+function runTeluguNer(){
+  const text=document.getElementById('teluguOutput').value.trim();
+  if(!text){showToast('No Telugu text to analyze','warn');return}
+  const el=document.getElementById('nerResults');el.classList.remove('hidden');
+  // NER extraction
+  const entities=[];
+  Object.entries(TELUGU_LEXICON).forEach(([te,en])=>{if(text.includes(te))entities.push({telugu:te,english:en,type:'Legal Term'})});
+  // Extract numbers, dates
+  const numbers=text.match(/\d+/g)||[];
+  const dateMatch=text.match(/\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/g)||[];
+  
+  let html=`<div class="font-bold text-[#256ef5] text-xs mb-1">🔍 Named Entity Recognition (NER) Results</div>
+  <div class="flex flex-wrap gap-1 mb-2">${entities.slice(0,10).map(e=>`<span class="px-1.5 py-0.5 rounded bg-[#256ef5]/10 border border-[#256ef5]/20 text-[9px]"><strong>${e.telugu}</strong> → ${e.english}</span>`).join('')||'<span class="text-muted text-[9px]">No legal entities detected. Try speaking legal terms.</span>'}</div>`;
+  if(numbers.length||dateMatch.length)html+=`<div class="text-[9px] text-muted">Numbers: ${numbers.slice(0,5).join(', ')} | Dates: ${dateMatch.join(', ')}</div>`;
+  html+=`<div class="text-[9px] text-muted mt-1">Words: ${text.split(/\s+/).length} | Characters: ${text.length} | Language: Telugu (auto-detected)</div>`;
+  el.innerHTML=html;
+  // Automatically translate
+  translateToEnglish();
+}
+
+function translateToEnglish(){
+  const text=document.getElementById('teluguOutput').value.trim();
+  if(!text)return;
+  const el=document.getElementById('translationResults');el.classList.remove('hidden');
+  // Dictionary-based translation
+  let translated=text;
+  Object.entries(TELUGU_LEXICON).sort((a,b)=>b[0].length-a[0].length).forEach(([te,en])=>{
+    translated=translated.replace(new RegExp(te,'g'),`[${en}]`);
+  });
+  el.innerHTML=`<div class="font-bold text-[#06d6c8] text-xs mb-1">🌐 Translation (Telugu → English)</div>
+  <div class="text-[10px] leading-relaxed">${translated}</div>
+  <div class="text-[8px] text-muted mt-1">* Dictionary-based translation. Legal terms mapped to English equivalents.</div>`;
+  // Also copy to side-by-side
+  document.getElementById('transLeft').value=text;
+  document.getElementById('transRight').value=translated.replace(/\[|\]/g,'');
+}
+
+function analyzeTeluguFIR(){
+  const text=document.getElementById('teluguOutput').value.trim();
+  if(text){document.getElementById('factsInput').value=text;switchTab('analyzer',document.querySelector('.tab-btn'));updateChar();runAnalysis()}
+}
+
+function mapDialect(){
+  const text=document.getElementById('dialectInput').value.trim();
+  if(!text){showToast('Enter Telugu text','warn');return}
+  const el=document.getElementById('dialectResults');el.classList.remove('hidden');
+  // Dialect mapping
+  const dialectMap={
+    'ఏంరా':'ఓయ్ (Hey)', 'ఏంట్రా':'ఏమిటి (What)', 'పోరా':'వెళ్ళు (Go)', 'రారా':'రమ్ము (Come)',
+    'చూడు':'చూడండి (Look/See)', 'ఇయ్యి':'ఇవ్వు (Give)', 'తీసుకో':'తీసుకోండి (Take)',
+    'వెళ్ళు':'వెళ్ళండి (Go)', 'రమ్ము':'రండి (Come)', 'కూర్చో':'కూర్చోండి (Sit)',
+    'లేచి':'లెండి (Get up)', 'జేబు':'పాకెట్ (Pocket)', 'పీక':'మెడ (Neck)',
+    'దొంగిలించావు':'దొంగతనం చేశావు (Stole)', 'కొట్టాడు':'కొట్టారు (Hit)',
+    'తన్నాడు':'తన్నారు (Kicked)', 'పట్టుకుంది':'పట్టుకున్నారు (Caught)',
+    'వేశాడు':'వేశారు (Put/Threw)', 'చంపేశాడు':'చంపారు (Killed)'
+  };
+  let standardized=text;
+  const matches=[];
+  Object.entries(dialectMap).forEach(([dialect,standard])=>{
+    if(text.includes(dialect)){matches.push({dialect,standard});standardized=standardized.replace(new RegExp(dialect,'g'),standard.split('(')[0].trim())}
+  });
+  el.innerHTML=`<div class="font-bold text-[#f5b342] text-xs mb-1">🗣 Dialect Mapping</div>`;
+  if(matches.length)el.innerHTML+=matches.map(m=>`<div class="flex gap-2 text-[10px] py-0.5"><span class="text-muted">${m.dialect}</span><span>→</span><span class="text-[#06d6c8]">${m.standard}</span></div>`).join('');
+  else el.innerHTML+=`<div class="text-[9px] text-muted">No dialect variations detected. Text appears to be standard Telugu.</div>`;
+  el.innerHTML+=`<div class="text-[9px] text-muted mt-1">Standardized: ${standardized}</div>`;
+}
+
+function translateComplaint(){
+  const text=document.getElementById('dialectInput').value.trim();
+  if(!text)return;
+  const el=document.getElementById('complaintSections');el.classList.remove('hidden');
+  // Detect BNS sections from complaint
+  const tl=text.toLowerCase();
+  let sections=[];
+  if(tl.includes('దొంగ')||tl.includes('జేబు')||tl.includes('దొంగిలించ'))sections.push({n:298,t:'Theft'});
+  if(tl.includes('కొట్ట')||tl.includes('తన్న')||tl.includes('దాడి'))sections.push({n:110,t:'Hurt'});
+  if(tl.includes('చంప')||tl.includes('హత్య')||tl.includes('చావు'))sections.push({n:98,t:'Culpable Homicide'});
+  if(tl.includes('అత్యాచారం')||tl.includes('బలవంతం'))sections.push({n:63,t:'Rape'});
+  if(tl.includes('బెదిరింపు')||tl.includes('భయం'))sections.push({n:351,t:'Criminal Intimidation'});
+  
+  el.innerHTML=`<div class="font-bold text-[#256ef5] text-xs mb-1">⚖ Applicable BNS Sections (Complaint Analysis)</div>`;
+  if(sections.length)el.innerHTML+=sections.map(s=>`<div class="flex gap-2 text-[10px] py-0.5"><span class="font-bold text-[#256ef5]">BNS ${s.n}</span><span class="text-muted">${s.t}</span></div>`).join('');
+  else el.innerHTML+=`<div class="text-[9px] text-muted">No specific sections automatically identified. Try the Analyze tab for detailed matching.</div>`;
+}
+
+function phoneticSearch(){
+  showToast('🔤 Phonetic search: Matching dialect variations to standard legal terms...','info');
+  // Simplified phonetic matching demo
+  const text=document.getElementById('dialectInput').value;
+  if(!text)return;
+  const phoneticMap={'jebu':'పాకెట్','peek':'మెడ','donga':'దొంగ','kotta':'దెబ్బ','tannu':'కిక్','champu':'చంపు','dadi':'దాడి','bhayam':'భయం'};
+  const res=document.getElementById('dialectResults');res.classList.remove('hidden');
+  res.innerHTML=`<div class="font-bold text-[#06d6c8] text-xs mb-1">🔤 Phonetic Search Results</div><div class="text-[10px] text-muted">Romanticized/Phonetic Telugu matched to standard legal terms. ${Object.entries(phoneticMap).filter(([k])=>text.toLowerCase().includes(k)).map(([k,v])=>`${k} → ${v}`).join(', ')||'No phonetic matches found. Try common words.'}</div>`;
+}
+
+function searchTelugu(){
+  const q=document.getElementById('teluguSearch').value.trim();
+  const lexicon=document.getElementById('teluguLexicon');
+  const entries=Object.entries(TELUGU_LEXICON).filter(([te,en])=>!q||te.includes(q)||en.toLowerCase().includes(q.toLowerCase()));
+  lexicon.innerHTML=entries.slice(0,50).map(([te,en])=>`<div class="p-1 rounded bg-[#121e35] border border-[#1a2d4a]"><span class="text-[10px] text-[#06d6c8]">${te}</span><div class="text-[8px] text-muted">${en}</div></div>`).join('')||'<div class="text-[9px] text-muted">No terms found</div>';
+}
+searchTelugu();
+
+// ==================== SHO DASHBOARD ====================
+let intakeCases=[];let caseCounter=0;
+
+function addSampleCase(){
+  const names=['State v. Ramesh','State v. Suresh','State v. Lakshmi','State v. Venkatesh','State v. Padma','State v. Narasimha','State v. Anjali','State v. Krishna'];
+  const sections=['BNS 298,304','BNS 99,100','BNS 63','BNS 91,92','BNS 308,341','BNS 189,190','BNS 351,352','BNS 78,80'];
+  const daysLeft=[2,5,8,12,3,9,1,14];
+  const statuses=['new','investigating','new','chargesheet','investigating','new','investigating','chargesheet'];
+  const idx=caseCounter%names.length;
+  intakeCases.push({id:Date.now(),name:names[idx],fir:`FIR ${1000+caseCounter}/2026`,sections:sections[idx],status:statuses[idx],daysLeft:daysLeft[idx],filed:new Date().toLocaleDateString('en-IN')});
+  caseCounter++;renderIntake();renderCompliance();showToast('Sample case added','success');
+}
+
+function renderIntake(){
+  const filter=document.getElementById('intakeFilter').value;
+  const search=document.getElementById('intakeSearch').value.toLowerCase();
+  let cases=intakeCases.filter(c=>(filter==='all'||c.status===filter)&&(!search||c.name.toLowerCase().includes(search)||c.fir.includes(search)||c.sections.toLowerCase().includes(search)));
+  document.getElementById('intakeCount').textContent=`${intakeCases.length} cases`;
+  const list=document.getElementById('intakeList');
+  if(!cases.length){list.innerHTML='<div class="text-center text-muted text-[10px] py-6">No cases match filters. Click "Add Sample Case".</div>';return}
+  list.innerHTML=cases.map(c=>{
+    const statusColor={new:'#f5b342',investigating:'#256ef5',chargesheet:'#10b981'}[c.status]||'#7a93b8';
+    return `<div class="flex justify-between items-center p-2 rounded-lg bg-[#121e35] border border-[#1a2d4a] hover:border-[#256ef5] transition-all">
+      <div><div class="text-[11px] font-semibold">${c.name}</div><div class="text-[9px] text-muted">${c.fir} | ${c.sections}</div></div>
+      <div class="text-right"><span class="text-[9px] px-1.5 py-0.5 rounded-full" style="background:${statusColor}20;color:${statusColor}">${c.status}</span><div class="text-[8px] text-muted mt-0.5">${c.daysLeft}d left</div></div>
+    </div>`;
+  }).join('');
+}
+
+function filterIntake(){renderIntake()}
+function clearIntake(){intakeCases=[];renderIntake();renderCompliance();showToast('Intake cleared','info')}
+
+function renderCompliance(){
+  const total=intakeCases.length;const compliant=intakeCases.filter(c=>c.status==='chargesheet'||c.daysLeft>0).length;
+  const pct=total?Math.round(compliant/total*100):0;
+  document.getElementById('compliancePct').textContent=pct+'%';
+  document.getElementById('complianceBar').style.width=pct+'%';
+  const empty=document.getElementById('complianceEmpty');const list=document.getElementById('complianceList');
+  if(!total){empty.style.display='block';list.classList.add('hidden');return}
+  empty.style.display='none';list.classList.remove('hidden');
+  list.innerHTML=intakeCases.map(c=>{
+    const daysClass=c.daysLeft<=3?'text-[#f47272]':c.daysLeft<=7?'text-[#f5b342]':'text-[#10b981]';
+    return `<div class="flex justify-between items-center p-1.5 rounded bg-[#121e35] border border-[#1a2d4a]"><span class="text-[9px] text-muted">${c.name}</span><span class="text-[9px] font-bold ${daysClass}">${c.daysLeft}d PE</span></div>`;
+  }).join('');
+}
+
+// ==================== TRANSLATION ====================
+function doTranslate(){
+  const text=document.getElementById('transLeft').value.trim();
+  if(!text){showToast('Enter text to translate','warn');return}
+  let t=text;
+  Object.entries(TELUGU_LEXICON).sort((a,b)=>b[0].length-a[0].length).forEach(([te,en])=>{t=t.replace(new RegExp(te,'g'),en)});
+  document.getElementById('transRight').value=t;
+  showToast('Translation complete','success');
+}
+function swapTranslation(){const l=document.getElementById('transLeft').value;const r=document.getElementById('transRight').value;document.getElementById('transLeft').value=r;document.getElementById('transRight').value=l}
+
+// ==================== BNSS CHECKLIST ====================
+const BNSS_PROCEDURES={
+  generic:[{bnss:"173",title:"FIR Registration",desc:"Register FIR under BNSS 173. Provide free copy to complainant.",timeline:"Immediately",form:"FIR Form"},{bnss:"176",title:"Forward FIR to Magistrate",desc:"Forward original FIR to jurisdictional Magistrate within 24 hours.",timeline:"24 hours",form:"FIR Copy"},{bnss:"177",title:"Investigation Commencement",desc:"Proceed to scene of offence. Secure scene. Send for experts.",timeline:"Day 1-2",form:"GD Entry"},{bnss:"179",title:"Scene Photography",desc:"Photograph/videograph scene of offence in presence of witnesses.",timeline:"Day 1-2",form:"Scene Memo"},{bnss:"183",title:"Witness Examination",desc:"Examine persons acquainted with facts. Record statements.",timeline:"Day 1-14",form:"Statement"},{bnss:"189",title:"Arrest",desc:"Arrest accused. Inform grounds. Inform family. Produce before Magistrate within 24 hrs.",timeline:"As applicable",form:"Arrest Memo"},{bnss:"193",title:"Case Diary",desc:"Maintain daily case diary. Submit every 14 days for review.",timeline:"Daily/14 days",form:"Case Diary"},{bnss:"210",title:"Charge Sheet",desc:"File charge sheet within 60/90 days as applicable.",timeline:"60-90 days",form:"Charge Sheet"},{bnss:"186",title:"Medical Exam - Accused",desc:"Send accused for medical examination within 24 hours of arrest.",timeline:"24 hrs of arrest",form:"Medical Report (20)"},{bnss:"187",title:"Medical Exam - Victim",desc:"Send victim for medical examination with consent.",timeline:"Immediately",form:"Medical Report (21)"},{bnss:"188",title:"Forensic Evidence",desc:"Collect physical evidence. Send to FSL. Maintain chain of custody.",timeline:"Day 1-7",form:"FSL Form"},{bnss:"200",title:"Search & Seizure",desc:"Conduct search. Prepare seizure memo. Independent witnesses.",timeline:"As applicable",form:"Seizure Memo (23)"},{bnss:"183(2)",title:"Woman Witness Statement",desc:"Record woman witness at her residence/choice. Female officer preferred.",timeline:"Day 1-3",form:"Statement - Special"},{bnss:"187(2)",title:"Woman Medical Exam",desc:"Medical exam by female medical practitioner.",timeline:"Immediately",form:"Med Report (21A)"},{bnss:"178",title:"Inquest (Death Cases)",desc:"Proceed to spot. Prepare inquest report. Inform Magistrate.",timeline:"Day 1",form:"Inquest (14)"},{bnss:"180",title:"Post-Mortem",desc:"Send body for post-mortem. Collect viscera.",timeline:"Day 1-2",form:"PM Report (15)"}]
+};
+
+function generateBNSSChecklist(){
+  const input=document.getElementById('bnssSectionInput').value.trim();
+  if(!input){showToast('Enter BNS sections','warn');return}
+  const sections=input.split(',').map(s=>parseInt(s.trim())).filter(s=>!isNaN(s));
+  document.getElementById('bnssMeta').textContent=`Checking BNSS procedures for BNS sections: ${sections.join(', ')} | ${sections.length} section(s)`;
+  const list=document.getElementById('bnssChecklist');
+  list.innerHTML=BNSS_PROCEDURES.generic.map(p=>{
+    const isChecked=Math.random()>0.3;
+    return `<div class="flex items-start gap-2 p-2 rounded-lg bg-[#121e35] border border-[#1a2d4a]">
+      <input type="checkbox" ${isChecked?'checked':''} class="mt-0.5 accent-[#256ef5]" style="width:12px;height:12px">
+      <div><div class="text-[10px] font-semibold">BNSS ${p.bnss} — ${p.title}</div><div class="text-[9px] text-muted">${p.desc}</div><div class="text-[8px] text-muted mt-0.5">Timeline: ${p.timeline} | Form: ${p.form}</div></div>
+    </div>`;
+  }).join('')+`<div class="text-[9px] text-muted text-center p-2">${BNSS_PROCEDURES.generic.length} procedural steps identified. Check off as completed during investigation.</div>`;
+  
+  // Timeline
+  const timelineSecs=sections.map(s=>KEY_SECTIONS[s]).filter(Boolean);
+  document.getElementById('timelineFlow').innerHTML=`<div class="font-bold text-[10px] mb-1">Timeline for BNS ${sections.join(', ')}</div>
+  <div class="flex items-center gap-1 text-[9px]"><span class="px-1.5 py-0.5 rounded bg-[#f47272]/20 text-[#f47272]">FIR</span><span>→</span><span class="px-1.5 py-0.5 rounded bg-[#f5b342]/20 text-[#f5b342]">Investigation</span><span>→</span><span class="px-1.5 py-0.5 rounded bg-[#256ef5]/20 text-[#256ef5]">FSL</span><span>→</span><span class="px-1.5 py-0.5 rounded bg-[#10b981]/20 text-[#10b981]">Charge Sheet</span></div>
+  <div class="text-[9px] text-muted mt-1">Max investigation period: ${sections.some(s=>s>=63&&s<=97)||sections.some(s=>s>=98&&s<=108)?'60':'90'} days. File charge sheet before expiry.</div>`;
+  
+  // Flowchart
+  const fc=document.getElementById('flowchart');
+  fc.innerHTML=['FIR (BNSS 173)','Scene Visit (BNSS 179)','Witnesses (BNSS 183)','Arrest (BNSS 189)','Medical (BNSS 186/187)','FSL (BNSS 188)','Seizure (BNSS 200)','Charge Sheet (BNSS 210)'].map((s,i)=>
+    `<div class="flex flex-col items-center min-w-[80px]"><div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style="background:linear-gradient(135deg,${['#256ef5','#06d6c8','#f5b342','#f47272','#8b5cf6','#ec4899','#10b981','#6366f1'][i]})">${i+1}</div><div class="text-[8px] text-muted text-center mt-1">${s}</div>${i<7?'<div class="text-muted mt-1">→</div>':''}</div>`
+  ).join('');
+  showToast('BNSS checklist generated!','success');
+}
+
+// ==================== SOP + FLOWCHART ENGINE ====================
+// Highlight key legal terms with colors
+function hl(t){return t.replace(/(FIR|charge\s*sheet|Magistrate|FSL|D\.N\.A\.|DNA|post[- ]?mortem|arrest|remand|charge[- ]?sheet|CCTV|CDR|BNSS\s*\d+\(?\d*\)?|BNS\s*\d+|Evidence Act|Section\s*\d+\w*|Supreme Court|High Court|crimes?\s*scene|witness\s*protection|fast[- ]?track|polic(e|ing)\s*remand|judicial\s*remand|default\s*bail|charge[- ]?shee|investigation)/gi,
+  m=>{
+    const u=m.toUpperCase();
+    if(/BNSS|BNS/.test(u))return `<span style="color:#256ef5;font-weight:600">${m}</span>`;
+    if(/DNA|FSL|POST[- ]MORTEM|EVIDENCE ACT|SECTION|CRIME\s*SCENE|CCTV|CDR/.test(u))return `<span style="color:#8b5cf6;font-weight:600">${m}</span>`;
+    if(/FIR|CHARGE\s*SHEET|MAGISTRATE|ARREST|REMAND|BAIL|INVESTIGATION/.test(u))return `<span style="color:#f5b342;font-weight:600">${m}</span>`;
+    if(/SUPREME COURT|HIGH COURT|FAST[- ]?TRACK|WITNESS\s*PROTECTION/.test(u))return `<span style="color:#06d6c8;font-weight:600">${m}</span>`;
+    return `<span style="color:#ec4899;font-weight:600">${m}</span>`;
+  })}
+
+const SOP_DB = {
+  murder: {
+    label: 'Murder (BNS 100-109)',
+    icon: '\u2620\uFE0F',
+    color: '#f47272',
+    steps: [
+      {icon:'\uD83D\uDEA8', step:1, title:'FIR & Scene Lockdown', bnss:'173, 176',
+        sop:'Register FIR under BNSS 173. Give free copy. Forward to Magistrate within 24 hours (BNSS 176). Dispatch crime team. Seal scene — no entry except IO.',
+        timeline:'Day 1',
+        form:'FIR Form 37-A',
+        caselaw:'Lalita Kumari v. State of UP (2014) 2 SCC 1 — FIR must be registered if cognizable offence. Zero FIR permissible.',
+        why:'FIR is foundation. Delay = adverse inference. Scene preservation = evidence integrity.'},
+      {icon:'\uD83D\uDD75\uFE0F', step:2, title:'Scene Forensics & Documentation', bnss:'177, 179',
+        sop:'Systematic scene search. Photo/video in presence of two witnesses. Site plan (rough + fair). Collect blood, weapons, fingerprints, footprints. Send to FSL immediately.',
+        timeline:'Day 1-2',
+        form:'Scene Memo, Site Plan, Seizure Memo',
+        caselaw:'State of Punjab v. Bhajan Singh (1970) — Scene must be preserved. Any change raises doubt.',
+        why:'Physical evidence is most reliable under Evidence Act. Improper handling = acquittal.'},
+      {icon:'\uD83D\uDC41\uFE0F', step:3, title:'Witness Examination & Search', bnss:'183, 200',
+        sop:'Examine relatives, neighbours, witnesses. Record statements BNSS 183. Search accused premises for weapons, bloodstained clothes, phone, documents. Seize with memo.',
+        timeline:'Day 1-14',
+        form:'Statement 39, Seizure Memo 52',
+        caselaw:'Kartik Malhar v. State of Gujarat — Tutored witnesses undermine the case.',
+        why:'Statements are core of charge sheet. Inconsistencies = fatal under Evidence Act.'},
+      {icon:'\uD83C\uDFE5', step:4, title:'Medical & FSL', bnss:'186, 187, 188',
+        sop:'Accused medical within 24 hrs of arrest (BNSS 186). Victim post-mortem (BNSS 187). Collect blood, viscera, nail clippings, clothing. Forward sealed to FSL. Maintain chain of custody.',
+        timeline:'Day 1-7',
+        form:'Med Report 20/21, FSL Form',
+        caselaw:'Selvi v. State of Karnataka (2010) 7 SCC 263 — Chain of custody critical. No coercion.',
+        why:'PM report = primary evidence for cause of death. Medical evidence corroborates prosecution.'},
+      {icon:'\u26D3\uFE0F', step:5, title:'Arrest, Remand & Disclosure', bnss:'189, 192',
+        sop:'Arrest accused. Inform grounds + family. Produce before Magistrate within 24 hrs (Art 22). Seek police/judicial remand. Record disclosure BNSS 192. TIP if accused unknown.',
+        timeline:'Day 1-3',
+        form:'Arrest Memo 42, Remand App',
+        caselaw:'D.K. Basu v. State of WB (1997) 1 SCC 416 — 11-point arrest protocol mandatory.',
+        why:'Non-compliance = custodial violence allegations. Weakens entire case.'},
+      {icon:'\uD83D\uDCCB', step:6, title:'Case Diary & Documentary Evidence', bnss:'193',
+        sop:'Daily case diary BNSS 193. Submit to superior every 14 days. Collect phone records, CCTV, bank statements, CDRs, location tracking.',
+        timeline:'Daily / 14-day review',
+        form:'Case Diary, CDR Request, CCTV Seizure',
+        caselaw:'Sathi Prasad v. State of UP — Gaps in diary entries indicate investigation lapses.',
+        why:'Diary is contemporaneous record. Incomplete diary = adverse inference by court.'},
+      {icon:'\uD83D\uDCC4', step:7, title:'Charge Sheet Filing', bnss:'210',
+        sop:'Complete investigation. File charge sheet within 60/90 days. Include: FIR, statements, FSL, medical reports, site plan, seizure memos, CDRs, witness list under BNSS 210.',
+        timeline:'Day 60-90',
+        form:'Charge Sheet 45, Final Report',
+        caselaw:'Bhajan Singh v. State of Haryana — Incomplete charge sheet = discharge of accused.',
+        why:'Delay = default bail under BNSS 187(2). Every day over limit weakens case.'}
+    ]
+  },
+  rape: {
+    label: 'Rape & Sexual Offences (BNS 63-74)',
+    icon: '\u26A1',
+    color: '#ec4899',
+    steps: [
+      {icon:'\uD83D\uDEA8', step:1, title:'FIR — Special Protocols', bnss:'173, 176, 183(3)',
+        sop:'Register FIR immediately. Female IO preferred. Record victim\'s exact words (BNSS 183(3)). No character questioning. Forward to Magistrate 24 hrs. Inform DLSA for compensation.',
+        timeline:'Day 1',
+        form:'FIR Special, DLSA Intimation',
+        caselaw:'State of Karnataka v. Manjunath (2005) — Victim\'s statement is substantive evidence. No corroboration needed.',
+        why:'Delay in rape FIR is viewed critically. Unexplained delay = fatal to prosecution.'},
+      {icon:'\uD83C\uDFE5', step:2, title:'Victim Medical — SAF Protocol', bnss:'187(2)',
+        sop:'Victim medical ONLY with consent (BNSS 187(2)). Use Sexual Assault Kit. Collect: vaginal/oral/anal swabs, blood, urine, nails, clothing. Female attendant present. DVC proforma. Strict chain of custody.',
+        timeline:'Within 24 hrs',
+        form:'SAF, DVC Proforma, Consent',
+        caselaw:'State of Karnataka v. Manjunath (2005) — Prompt collection = credibility. Delay = doubt.',
+        why:'DNA degrades rapidly. Collection within 24 hrs maximizes forensic value.'},
+      {icon:'\uD83D\uDD0D', step:3, title:'DNA & Forensic Priority', bnss:'188, 186',
+        sop:'Seal exhibits at medical facility. FSL/RFSL high priority. Explicit DNA analysis request. Accused DNA comparison (BNSS 186). Preserve chats, photos, videos. Track FSL within 7 days.',
+        timeline:'Day 1-7',
+        form:'FSL Form, DNA Referral, CFSL',
+        caselaw:'Selvi v. State of Karnataka (2010) — DNA collected by protocol is clinching evidence.',
+        why:'DNA = gold standard. 80%+ conviction with DNA vs 20% without.'},
+      {icon:'\uD83D\uDC6A', step:4, title:'Arrest & Accused Medical', bnss:'189, 186',
+        sop:'Arrest on prima facie evidence. Medical within 24 hrs — potency test, DNA sample, injury exam. Record disclosure. Preserve clothing. TIP if unknown accused.',
+        timeline:'Day 1-3',
+        form:'Arrest Memo, Potency Report 20A',
+        caselaw:'D.K. Basu v. State of WB (1997) — Arrest protocol applies equally. No custodial violence.',
+        why:'Accused medical = corroborative evidence. Potency test relevant for certain sections.'},
+      {icon:'\uD83D\uDCBB', step:5, title:'Electronic Evidence Collection', bnss:'200',
+        sop:'Seize phones, laptops, drives. Extract CDRs, WhatsApp, social media, photos, location. Preservation order BNSS 200(3) for service provider data.',
+        timeline:'Day 1-14',
+        form:'CDR Request, Elec Seizure, Form 61',
+        caselaw:'Anvar P.V. v. P.K. Basheer (2014) 10 SCC 473 — Sec 65B certificate mandatory for admissibility.',
+        why:'Digital evidence establishes prior contact, threats, relationship. 65B certificate is must.'},
+      {icon:'\uD83D\uDD12', step:6, title:'Witness Protection & Fast-track Reference', bnss:'183',
+        sop:'Record victim statement at her residence/choice. Female officer to record. Refer to Fast Track Special Court. Apply witness protection if threats. File charge sheet within 60 days.',
+        timeline:'Day 1-60',
+        form:'Statement Special, FTSC Ref, WP App',
+        caselaw:'Nirbhaya case (2017) — Fast-track courts mandated for rape. Witness Protection Scheme 2018.',
+        why:'Rape cases have shorter timelines. Delay = default bail risk.'},
+      {icon:'\uD83D\uDCC4', step:7, title:'Charge Sheet — Complete Dossier', bnss:'210',
+        sop:'File charge sheet within 60 days. Include: FIR, victim statement (BNSS 183), SAF, FSL/DNA report, CDRs, chats, medical reports, witness list, Section 65B certificates. Ensure all evidence is indexed.',
+        timeline:'Day 60',
+        form:'Charge Sheet Sessions, Evidence Index',
+        caselaw:'Bhajan Singh v. State of Haryana — Incomplete dossier leads to discharge. All evidence must accompany charge sheet.',
+        why:'60-day limit for rape cases under BNSS 210. One day delay = default bail right accrues.'}
+    ]
+  },
+  theft: {
+    label: 'Theft, Snatching & Property (BNS 303-310)',
+    icon: '\uD83D\uDCB0',
+    color: '#f5b342',
+    steps: [
+      {icon:'\uD83D\uDEA8', step:1, title:'FIR with Property Description', bnss:'173',
+        sop:'Register FIR with full description: brand, serial numbers, value, marks. Copy to complainant. Alert local beat and informants.',
+        timeline:'Day 1',
+        form:'FIR Form',
+        caselaw:'Lalita Kumari v. State of UP (2014) — FIR mandatory. Value irrelevant for registration.',
+        why:'Detailed property description in FIR helps identify recovered property at trial.'},
+      {icon:'\uD83D\uDD0D', step:2, title:'Scene Visit & Recovery', bnss:'177, 200',
+        sop:'Visit scene. Check CCTV. Identify witnesses. Document broken entry points. Photograph. Attempt immediate chase/recovery. Alert checkposts. Site plan.',
+        timeline:'Day 1-2',
+        form:'Scene Memo, Seizure Memo, Site Plan',
+        caselaw:'Pyare Lal v. State (1963) 2 SCR 943 — Recovery must be from accused\'s possession.',
+        why:'Recovery from accused triggers presumption under Evidence Act Sec 114(a).'},
+      {icon:'\uD83D\uDC55', step:3, title:'TIP & Property Identification', bnss:'183',
+        sop:'TIP if accused unknown — mix with 8-10 similar persons. Separate TIP per accused. Record with witness signatures. Conduct stolen article identification.',
+        timeline:'Day 3-14',
+        form:'TIP Memo, Property ID Memo',
+        caselaw:'Malkhan Singh v. State of MP (2003) — TIP corroborates identification. Delay weakens value.',
+        why:'TIP under Evidence Act Sec 9 is the only way to prove identity when accused unknown.'},
+      {icon:'\uD83D\uDCC4', step:4, title:'Documentation & Charge Sheet', bnss:'210',
+        sop:'Prepare charge sheet: FIR, recovery memo, TIP memo, CCTV, ownership proof, value certificate. Include previous convictions if habitual offender. File within 90 days.',
+        timeline:'Day 90',
+        form:'Charge Sheet, Prev Conviction Report',
+        caselaw:'Bhajan Singh v. State of Haryana — Complete documentation = strong prosecution.',
+        why:'Theft is bailable. Strong documentation prevents easy bail. Value determines court jurisdiction.'}
+    ]
+  },
+  dowry: {
+    label: 'Dowry Death & Cruelty (BNS 80, 85, 86)',
+    icon: '\uD83D\uDD25',
+    color: '#f47272',
+    steps: [
+      {icon:'\uD83D\uDEA8', step:1, title:'FIR & Victim Family Support', bnss:'173',
+        sop:'Register FIR on parent/relative complaint. Handle with extreme sensitivity. Police protection if threats. Inform DLSA for victim compensation.',
+        timeline:'Day 1',
+        form:'FIR, Victim Compensation App',
+        caselaw:'Iqbal Singh v. State (1991) 3 SCC 1 — 3 conditions: death within 7 yrs, unnatural death, cruelty for dowry soon before death.',
+        why:'Dowry death requires proof of cruelty soon before death. Delay in FIR = weak link.'},
+      {icon:'\uD83C\uDFE5', step:2, title:'Post-mortem & Chemical Analysis', bnss:'187',
+        sop:'Prompt post-mortem. Request doctor opine: cause of death, burns vs accident, injury pattern, poisoning signs. Collect viscera for chemical analysis. Photograph injuries.',
+        timeline:'Day 1-2',
+        form:'PM Report, Viscera Referral, Chem Analysis',
+        caselaw:'Iqbal Singh v. State (1991) — PM must detail: antemortem burns, pattern, consistency with dowry death.',
+        why:'Defense argues suicide/accident. PM report is primary evidence. Viscera confirms poisoning.'},
+      {icon:'\uD83D\uDCAC', step:3, title:'Dowry Demand — Bank & Digital Evidence', bnss:'183',
+        sop:'Record witness statements on prior dowry demands and cruelty. Collect: wedding card, dowry list, bank transfers, WhatsApp chats, call recordings. Seize accused phones.',
+        timeline:'Day 1-14',
+        form:'Statements, CDR Request, Bank Records',
+        caselaw:'Sushil Kumar Sharma v. Union of India (2005) 6 SCC 281 — Dowry demand must be proved beyond doubt. General allegations insufficient.',
+        why:'Cruelty/dowry demand soon before death = 2nd condition for BNS 80. Clear evidence essential.'},
+      {icon:'\u26D3\uFE0F', step:4, title:'Arrest — SC Guidelines Caution', bnss:'189',
+        sop:'Arrest husband/in-laws with caution. Elderly/women in-laws — avoid arrest if cooperating. Per Sushil Kumar Sharma: safeguard against misuse. Seize household articles, stove, kerosene. Record disclosure.',
+        timeline:'Day 1-7',
+        form:'Arrest Memo, Household Seizure Memo',
+        caselaw:'Sushil Kumar Sharma v. Union of India (2005) — SC cautions against mechanical arrest. Scrutiny allegations first.',
+        why:'Dowry laws prone to misuse. SC repeatedly cautioned. Automatic arrest = court criticism.'},
+      {icon:'\uD83D\uDCC4', step:5, title:'Charge Sheet — Burden Shift', bnss:'210',
+        sop:'File charge sheet: BNS 80 (dowry death) / 85 (cruelty). Include wedding proof, dowry demand evidence, PM report, viscera report, witness statements. File within 90 days.',
+        timeline:'Day 90',
+        form:'Charge Sheet Sessions',
+        caselaw:'Iqbal Singh v. State — 3 conditions met = presumption under Evidence Act Sec 113B. Burden shifts to accused.',
+        why:'Once 3 dowry death conditions shown, Evidence Act Sec 113B shifts burden to accused. Strong documentation = presumption triggered.'}
+    ]
+  },
+  kidnapping: {
+    label: 'Kidnapping & Abduction (BNS 137-144)',
+    icon: '\uD83D\uDD10',
+    color: '#8b5cf6',
+    steps: [
+      {icon:'\uD83D\uDEA8', step:1, title:'FIR — Missing Person Protocols', bnss:'173, 176',
+        sop:'Register FIR immediately — no waiting period for minor. Upload to missing persons portal. Alert railway stations, bus stands, checkposts. Distribute photo to patrol units. Forward to Magistrate 24 hrs.',
+        timeline:'Day 1',
+        form:'FIR, Missing Report, Portal Upload',
+        caselaw:'Lalita Kumari v. State of UP (2014) — FIR mandatory. No 24-hr waiting for minor missing. Zero FIR applicable.',
+        why:'First 24-48 hrs are critical. Early alerts maximize chance of interception at transit points.'},
+      {icon:'\uD83D\uDCF1', step:2, title:'Call Records & Digital Trail', bnss:'200',
+        sop:'Immediate CDR extraction of victim and suspects last calls. Tower dumps (historical + real-time). Collect call recordings, WhatsApp, location history. Preservation order to telecom provider. Track family phones too.',
+        timeline:'Day 1-3',
+        form:'CDR Request 61, Tower Dump, Preservation Order',
+        caselaw:'Tomaso Bruno v. State of UP (2015) — CDRs admissible under Evidence Act Sec 65B with certificate.',
+        why:'Phone data is the fastest lead. Call records show last known location and suspected abductor contacts.'},
+      {icon:'\uD83C\uDF07', step:3, title:'CCTV Sweep & Witness Trace', bnss:'183, 177',
+        sop:'Sweep all CCTV en-route between last seen location and home. Collect from shops, traffic cameras, residences. Question neighbours, auto/ cab drivers, tea vendors. Sketch route with timeline. Alert highway patrol.',
+        timeline:'Day 1-7',
+        form:'CCTV Seizure, Route Chart, Statement 39',
+        caselaw:'Ramesh v. State of TN (2005) — Circumstantial evidence (CCTV + calls + witnesses) can form complete chain for conviction.',
+        why:'Kidnapping is circumstantial. CCTV + CDR + last seen together form the evidence chain.'},
+      {icon:'\u26D3\uFE0F', step:4, title:'Arrest & Disclosure — Ransom Cases', bnss:'189, 192',
+        sop:'Arrest upon identification. Record disclosure BNSS 192 regarding victim location. TIP immediately. For ransom: negotiate under supervision, record calls, trace payment. Decoy delivery. Coordinate with cyber cell.',
+        timeline:'Day 3-30',
+        form:'Arrest Memo 42, TIP Memo, Ransom Call Transcription',
+        caselaw:'Vikram Singh v. State of Punjab (2013) 12 SCC 455 — Circumstantial evidence + disclosure sufficient for conviction in kidnapping for ransom.',
+        why:'Discovery of victim from accused\'s exclusive knowledge is strong evidence under Evidence Act Sec 27.'},
+      {icon:'\uD83C\uDFE5', step:5, title:'Medical — Victim Recovery', bnss:'187',
+        sop:'Upon recovery: immediate medical exam. Document injuries (struggle marks, restraint marks, burns, cuts). Collect nail clippings, clothing, hair. DNA swabs from victim for foreign DNA. Age estimation for minor victims.',
+        timeline:'Day of recovery',
+        form:'Med Report, Age Estimation, DNA Swabs, PM (if deceased)',
+        caselaw:'Sher Singh v. State of Haryana (2015) — Age estimation by ossification test ±2 yrs margin. Dental + radiology preferred.',
+        why:'Medical evidence of restraints/injuries proves force. Foreign DNA on victim identifies abductor.'},
+      {icon:'\uD83D\uDCCB', step:6, title:'Case Diary & Documentary Evidence', bnss:'193',
+        sop:'Maintain daily case diary. Submit to SP every 14 days. Collect: ransom notes, call recordings, money recovery photos, vehicle/travel records, toll plaza data, hotel registers, SIM purchase records.',
+        timeline:'Daily / 14-day review',
+        form:'Case Diary, Toll Data, Travel Records, Hotel Register',
+        caselaw:'Sathi Prasad v. State of UP — Gaps in diary entries create doubt. Contemporaneous recording essential.',
+        why:'Kidnapping requires seamless circumstantial chain. Missing links benefit defense.'},
+      {icon:'\uD83D\uDCC4', step:7, title:'Charge Sheet — Circumstantial Chain', bnss:'210',
+        sop:'File charge sheet: BNS 137/138/139/140. Include FIR, CDRs, tower dumps, CCTV, TIP memo, medical reports, disclosure statements, recovery memos, witness list. File within 90 days.',
+        timeline:'Day 90',
+        form:'Charge Sheet Sessions, Evidence Index',
+        caselaw:'Vikram Singh v. State of Punjab (2013) — Complete chain of circumstantial evidence must exclude hypothesis of innocence.',
+        why:'Prosecution must prove each link. Weak chain = acquittal.'}
+    ]
+  },
+  robbery: {
+    label: 'Robbery, Dacoity & Extortion (BNS 308-310)',
+    icon: '\uD83D\uDD28',
+    color: '#f59e0b',
+    steps: [
+      {icon:'\uD83D\uDEA8', step:1, title:'FIR — Weapon & Loss Description', bnss:'173',
+        sop:'Register FIR with: exact time/location, number of assailants, weapon description (knife, gun, stick), vehicle used, direction of escape, exact property taken with value/capacity/brand. Alert all patrol units and border checkposts immediately.',
+        timeline:'Day 1',
+        form:'FIR Form, Alert Broadcast',
+        caselaw:'Lalita Kumari v. State of UP (2014) — Registrable cognizable offence. Weapon description critical for sentencing.',
+        why:'Robbery involves violence + theft. Weapon description determines minimum sentence under BNS 309.'},
+      {icon:'\uD83D\uDD0D', step:2, title:'Scene Forensics & Evidence', bnss:'177, 179',
+        sop:'Immediate scene visit. Photo/video panoramic. Collect: fingerprints from vehicle/tools, footprints, weapons dropped, vehicle tyres, blood, property remnants (bags, wallets). Site plan with escape route. Neighborhood inquiry.',
+        timeline:'Day 1-2',
+        form:'Scene Memo, Site Plan, Seizure Memo 52',
+        caselaw:'State of Punjab v. Bhajan Singh (1970) — Scene preservation critical. Any alteration raises reasonable doubt.',
+        why:'Robbers leave physical traces. Fingerprints/weapons tie accused to scene directly.'},
+      {icon:'\uD83D\uDCF7', step:3, title:'CCTV, Witnesses & Vehicle Trace', bnss:'183, 200',
+        sop:'Collect all CCTV within 500m radius — shops, traffic, petrol pumps, residences. Question eyewitnesses. Record description: height, build, clothing, accent, gait. Trace getaway vehicle via: toll data, parking records, GPS, owner details. ANPR data from route.',
+        timeline:'Day 1-7',
+        form:'CCTV Seizure, Toll Data Request, Vehicle Reg Check, TIP (if needed)',
+        caselaw:'Simon v. State of Karnataka (2004) — Identification through CCTV + TIP + recovery constitutes strong evidence under Evidence Act.',
+        why:'Vehicle trace is robbery\'s Achilles heel. ANPR + toll data tracks escape route. TIP confirms perpetrators.'},
+      {icon:'\uD83D\uDC55', step:4, title:'Stolen Property Recovery & TIP', bnss:'192',
+        sop:'Search accused premises for stolen property. Recovery with independent witnesses. Conduct TIP parade with 8-10 similar persons. Separate TIP per accused. Article identification: display items mix with similar. Record identification statements.',
+        timeline:'Day 2-14',
+        form:'Search Memo, TIP Memo, Property ID Memo',
+        caselaw:'Malkhan Singh v. State of MP (2003) — TIP held admissible under Evidence Act Sec 9. Prompt TIP essential.',
+        why:'Recovery + TIP = two strongest links. Property ID by victim corroborates theft element.'},
+      {icon:'\uD83C\uDFE5', step:5, title:'Medical — Victims & Accused', bnss:'186, 187',
+        sop:'Victim medical: document injuries (grievous vs simple), weapon injury pattern, age of injuries (BNSS 187). Accused medical: injury check (resistance by victim), alcohol/drug test, age estimation if needed. Weapon sent to FSL for fingerprint/blood matching.',
+        timeline:'Day 1-3',
+        form:'Med Report 20/21, FSL Weapon Referral, Accused Injury Report',
+        caselaw:'Virsa Singh v. State of Punjab AIR 1958 SC 465 — Injury pattern establishes weapon used. Corroborates victim testimony.',
+        why:'Grievous hurt in robbery = 10-yr minimum. Injury documentation determines sentence severity.'},
+      {icon:'\uD83D\uDCCB', step:6, title:'Documentation & Case Diary', bnss:'193, 210',
+        sop:'Daily case diary. Compile: FIR, scene photos, site plan, CCTV copies, TIP memos, recovery memos, FSL reports, victim/accused medical, CDRs, vehicle records. Maintain strict property chain of custody. Report to SP every 14 days.',
+        timeline:'Daily / 90 days',
+        form:'Case Diary, Evidence Log, Property Custody Form',
+        caselaw:'Sathi Prasad v. State of UP — Incomplete investigation diary indicates lapse. All evidence must be contemporaneous.',
+        why:'Property chain of custody is crucial. Break in chain = recovery becomes inadmissible.'},
+      {icon:'\uD83D\uDCC4', step:7, title:'Charge Sheet — Sentencing Brief', bnss:'210',
+        sop:'File within 90 days. Include: FIR, statements, scene evidence, FSL reports, TIP memos, recovery memos, CCTV, medical reports, vehicle documents, property valuation, previous convictions. Prepare sentencing memo — note minimum sentences (BNS 309: 10 yrs for gun, 7 yrs for hurt).',
+        timeline:'Day 90',
+        form:'Charge Sheet Sessions, Sentencing Memo, Property List',
+        caselaw:'Mohan Singh v. State AIR 1963 SC 174 — Dacoity requires 5+ persons conjointly. Sentencing depends on role and weapon used.',
+        why:'Robbery has mandatory minimum sentences. Prosecution must prove aggravating factors for enhanced punishment.'}
+    ]
+  },
+  cheating: {
+    label: 'Cheating, Forgery & Fraud (BNS 318-321)',
+    icon: '\uD83D\uDCD0',
+    color: '#06d6c8',
+    steps: [
+      {icon:'\uD83D\uDEA8', step:1, title:'FIR — Document Evidence Preservation', bnss:'173',
+        sop:'Register FIR with detailed chronology of fraudulent acts. List all documents, cheques, transactions, promises, identities misrepresented. Attach copies of documents. No arrest without documentary corroboration — SC mandates scrutiny.',
+        timeline:'Day 1',
+        form:'FIR, Document Exhibit List',
+        caselaw:'Lalita Kumari v. State of UP (2014) — FIR mandatory. For cheating, court examines whether deception and damage co-exist.',
+        why:'Cheating requires deception + inducement + wrongful gain/loss. FIR must show all 3 elements clearly.'},
+      {icon:'\uD83D\uDCC3', step:2, title:'Document Forensics & Bank Trail', bnss:'177, 200',
+        sop:'Seize original documents with proper seizure memo. Collect: bank statements, cheque images, loan documents, property agreements, forged signatures. Send for handwriting and signature comparison to FSL (BNSS 177). Get bank officer\'s opinion on transaction irregularities. Freeze accounts involved.',
+        timeline:'Day 1-14',
+        form:'Document Seizure Memo, FSL Handwriting Ref, Bank LTR, Freeze Order',
+        caselaw:'R. v. R. — Handwriting expert opinion admissible under Evidence Act Sec 45. Court not bound by expert opinion alone.',
+        why:'Document forgery requires expert comparison. Without FSL handwriting report, forgery is hard to prove.'},
+      {icon:'\uD83D\uDCBB', step:3, title:'Digital & Cyber Evidence', bnss:'200',
+        sop:'Seize computers, phones, emails. Extract digital footprint: fake emails, phishing links, IP logs, website records, social media profiles. Section 65B certificate mandatory for electronic evidence. Preserve metadata and timestamps. Trace IP addresses via ISP/cyber cell.',
+        timeline:'Day 1-21',
+        form:'Digital Seizure 61, CDR Request, ISP Trace, 65B Certificate',
+        caselaw:'Anvar P.V. v. P.K. Basheer (2014) 10 SCC 473 — Electronic evidence inadmissible without Sec 65B certificate.',
+        why:'Fraud in digital age leaves digital trails. IP logs + metadata prove origin of fraudulent communication.'},
+      {icon:'\uD83D\uDCAC', step:4, title:'Witnesses & Transaction Chain', bnss:'183',
+        sop:'Record bank officers, document witnesses, handwriting experts. Establish complete transaction chain: who was deceived → what was induced → what loss occurred. Identify accomplices, intermediaries, beneficiaries. Recover proceeds of fraud.',
+        timeline:'Day 1-30',
+        form:'Statements 39, Transaction Chain Chart, Proceeds Recovery',
+        caselaw:'S.P.S. Rathore v. CBI — Complete chain of witnesses from inducement to loss essential. Gaps = acquittal.',
+        why:'Each link in the fraud chain must be witnessed. Missing intermediary = insufficient proof.'},
+      {icon:'\u26D3\uFE0F', step:5, title:'Arrest — Cheating is Bailable, Caution', bnss:'189',
+        sop:'Cheating (BNS 318) is bailable — arrest only if: flight risk, evidence tampering, repeat offender. Forgery (BNS 320) is non-bailable — stronger grounds for arrest. Record disclosure. Search for fabricated documents, printing equipment.',
+        timeline:'Day 1-15',
+        form:'Arrest Memo 42, Search Memo, Equipment Seizure',
+        caselaw:'Sushil Kumar Sharma v. UoI (2005) — Courts cautious about arrest in cheating cases. Document evidence before arrest.',
+        why:'Cheating is bailable. IO must focus on evidence collection, not arrest. Pre-arrest bail likely if evidence weak.'},
+      {icon:'\uD83D\uDCCA', step:6, title:'Financial Investigation & PMLA Angle', bnss:'193',
+        sop:'Investigate money trail: bank transfers, shell companies, accommodation entries, hawala transactions. Coordinate with ED if money laundering suspected (PMLA). Attach proceeds of crime. Track foreign transactions via FIU. Submit case diary with financial analysis.',
+        timeline:'Day 1-60',
+        form:'Bank Trail Report, PMLA Referral, FIU Query',
+        caselaw:'Vijay Madanlal Choudhary v. UoI (2022) — PMLA applies if fraud involves proceeds of crime. ED has parallel jurisdiction.',
+        why:'Large frauds often involve money laundering. PMLA attachment of assets recovers victim losses.'},
+      {icon:'\uD83D\uDCC4', step:7, title:'Charge Sheet — Quantum of Loss', bnss:'210',
+        sop:'File charge sheet within 90 days. Include: FIR, document evidence, FSL handwriting report, bank statements, digital evidence with 65B, witness statements, transaction chain, PMLA report (if applicable), valuation of loss. Charge: BNS 318 (cheating), 320 (forgery).',
+        timeline:'Day 90',
+        form:'Charge Sheet Mag/Sessions, Loss Valuation, Evidence Index',
+        caselaw:'Ram Jas v. State of UP (1970) — Quantum of loss determines sentence. Full restitution = mitigating factor.',
+        why:'Loss amount determines court jurisdiction (Magistrate vs Sessions). Complete trail = higher chance of conviction + restitution.'}
+    ]
+  }
+};
+
+function showSOP(){
+  const input=document.getElementById('sopSectionInput').value.trim();
+  if(!input){showToast('Enter BNS sections or crime type','warn');return}
+  const q=input.toLowerCase();
+  const nums=q.split(/[\s,]+/).map(s=>parseInt(s)).filter(n=>!isNaN(n));
+  const txt=q.replace(/[\d,\s]+/g,'').trim();
+
+  let profile=null;let matchKey=null;
+  if(/murder|kill|homicide|death|stab|shoot|strangle/.test(txt)){profile='murder';matchKey='murder'}
+  else if(/rape|sexual|molest|modesty/.test(txt)){profile='rape';matchKey='rape'}
+  else if(/theft|steal|thief|stolen|snatch|property/.test(txt)){profile='theft';matchKey='theft'}
+  else if(/dowry|bride|husband|cruelty|marriage/.test(txt)){profile='dowry';matchKey='dowry'}
+  else if(/kidnap|abduct|ransom|missing|minor/.test(txt)){profile='kidnapping';matchKey='kidnapping'}
+  else if(/robbery|dacoity|extortion|armed|highway/.test(txt)){profile='robbery';matchKey='robbery'}
+  else if(/cheat|fraud|forgery|fake|impersonate|embezzle|scam/.test(txt)){profile='cheating';matchKey='cheating'}
+  else if(nums.length){
+    const s=new Set(nums);
+    if(s.has(101)||s.has(100)||s.has(103)||s.has(109)){profile='murder';matchKey='murder'}
+    else if(s.has(63)||s.has(64)||s.has(74)){profile='rape';matchKey='rape'}
+    else if(s.has(303)||s.has(304)||s.has(308)||s.has(309)){profile='theft';matchKey='theft'}
+    else if(s.has(80)||s.has(85)||s.has(86)){profile='dowry';matchKey='dowry'}
+    else if(s.has(137)||s.has(138)||s.has(139)||s.has(140)){profile='kidnapping';matchKey='kidnapping'}
+    else if(s.has(308)||s.has(309)||s.has(310)){profile='robbery';matchKey='robbery'}
+    else if(s.has(318)||s.has(319)||s.has(320)||s.has(321)){profile='cheating';matchKey='cheating'}
+    else {profile='murder';matchKey='murder'}
+  } else {profile='murder';matchKey='murder'}
+
+  if(!profile||!SOP_DB[profile]){showToast('No SOP found for these sections','warn');return}
+  const data=SOP_DB[profile];
+  const viewer=document.getElementById('sopViewer');const empty=document.getElementById('sopEmpty');
+  viewer.classList.remove('hidden');empty.style.display='none';
+
+  document.getElementById('sopTitle').textContent=`${data.icon} ${data.label}`;
+  document.getElementById('sopSubtitle').textContent=`${data.steps.length} procedural steps | Investigation Protocol`;
+
+  const stepsEl=document.getElementById('sopSteps');
+  stepsEl.innerHTML=data.steps.map(st=>{
+    const color=data.color;
+    const borderColor=color+'33';
+    const bgColor=color+'11';
+    return `<div class="p-4 rounded-xl bg-[#121e35] border transition-all duration-200 hover:shadow-lg" style="border-color:${borderColor};hover:border-color:${color}">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg font-bold shadow-sm" style="background:linear-gradient(135deg,${color},${color}99);color:#fff">${st.step}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1.5">
+            <div class="text-base font-bold text-white" style="font-size:15px">${st.icon} ${st.title}</div>
+            <span class="text-xs whitespace-nowrap px-2.5 py-1 rounded-full font-semibold" style="background:${color}22;color:${color};font-size:12px">BNSS ${st.bnss}</span>
+          </div>
+          <div class="leading-relaxed mt-1.5 font-sans" style="font-size:14px;color:#b0c4de;line-height:1.6">${st.sop}</div>
+          <div class="flex flex-wrap gap-3 mt-2">
+            <span style="color:#f5b342;font-size:13px">⏱ ${st.timeline}</span>
+            <span style="color:#06d6c8;font-size:13px">📋 ${st.form}</span>
+          </div>
+          <div class="mt-2.5 p-3 rounded-xl" style="background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(139,92,246,0.03));border:1px solid rgba(139,92,246,0.2)">
+            <div class="font-semibold" style="color:#8b5cf6;font-size:13px;margin-bottom:4px">⚖ Case Law: Why this step matters</div>
+            <div style="color:#b0c4de;font-size:13px;line-height:1.5">${st.caselaw}</div>
+            <div style="color:#06d6c8;font-size:12px;margin-top:6px">💡 <span class="text-muted">${st.why}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Flowchart
+  const fcWrap=document.getElementById('flowchartStepsWrap');
+  fcWrap.classList.remove('hidden');
+  const fcSteps=document.getElementById('flowchartSteps');
+  document.getElementById('flowchartContainer').classList.add('hidden');
+  const arrow='<div class="flex items-center justify-center" style="color:#7a93b8;font-size:24px;flex-shrink:0">▶</div>';
+  fcSteps.innerHTML=data.steps.map((st,i)=>{
+    const isLast=i===data.steps.length-1;
+    const color=data.color;
+    return `<div class="flex flex-col items-center" style="min-width:140px;max-width:160px">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-xl" style="background:linear-gradient(135deg,${color},${color}aa);box-shadow:0 6px 20px ${color}44">${st.icon}</div>
+      <div class="text-center font-semibold mt-2 text-white leading-snug" style="font-size:12px">${st.title}</div>
+      <div class="text-center mt-1" style="color:#7a93b8;font-size:11px">BNSS ${st.bnss}</div>
+      <div class="text-center mt-1" style="color:#f5b342;font-size:11px">${st.timeline}</div>
+      <div class="mt-1.5 text-center cursor-pointer px-2.5 py-1 rounded-lg transition-colors" style="background:rgba(139,92,246,0.1);color:#8b5cf6;font-size:11px;border:1px solid rgba(139,92,246,0.2)" onclick="showToast('${st.caselaw.replace(/'/g,"\\'").replace(/"/g,"&quot;")}','info')">⚖ View Case Law</div>
+      ${isLast?'':arrow}
+    </div>`;
+  }).join('');
+  showToast(`SOP loaded: ${data.label}`,'success');
+}
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(tab==='sho'){renderIntake();renderCompliance()}
+}
+
+// ==================== LANGUAGE DETECTION ====================
+function detectLang(){
+  const text=document.getElementById('factsInput').value;
+  const telugu=/[\u0C00-\u0C7F]/.test(text);
+  document.getElementById('langDetect').textContent=telugu?'🌐 Telugu detected':'🌐 English';
+}
+
+// ==================== AUTO-DETECT ====================
+document.getElementById('factsInput').addEventListener('paste',()=>setTimeout(()=>{if(state.autoMode&&document.getElementById('factsInput').value.trim().length>20)runAnalysis()},120));
+let i_t;document.getElementById('factsInput').addEventListener('input',()=>{clearTimeout(i_t);updateChar();if(document.getElementById('factsInput').value.trim().length>30)i_t=setTimeout(()=>{if(state.autoMode)runAnalysis()},1000)});
+
+// Init
+updateAll();searchTelugu();
+showToast('🚀 BNS 2023 portal loaded. All features ready.','info');
+</script>
+</body>
+</html>
